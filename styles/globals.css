@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+:root { --page: #B3DD98; }
+html, body { background: var(--page); color: #000; min-height: 100%; }
+
