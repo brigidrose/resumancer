@@ -3,19 +3,29 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-/* ---------- Theme (new palette) ---------- */
+/* ---------- Theme (your new palette) ---------- */
 const COLORS = {
-  page: "#B3DD98",          // page background
-  topLink: "#678AF4",       // top nav links
-  h1: "#000000",            // H1 color
-  unconventional: "#651A4B",// "Unconventional" accent
-  text: "#000000",          // general body text
-  outline: "#194D32",       // borders/outlines
-  button: "#A960A1",        // Inspire me button
-  boxBackground: "#E9F7DF", // card/box background
+  page: "#B3DD98",          // Background
+  topLink: "#678AF4",       // Top link buttons / accents
+  h1: "#5D3067",            // H1 text
+  unconventional: "#00C588",// 'Unconventional' word
+  text: "#224074",          // Body text
+  outline: "#224074",       // Borders / outlines
+  button: "#A960A1",        // Inspire Me button
+  cardBg: "#FFFFFF",        // Card background
+  boxBackground: "#EAF6D3", // Right-panel card bg
 } as const;
 
-/* ---------- UI bits ---------- */
+/* ---------- Types ---------- */
+type Idea = {
+  category: "practical" | "creative" | "absurd";
+  title: string;
+  why: string;
+  plan: string;
+  opener: string;
+};
+
+/* ---------- Inline UI bits ---------- */
 function Spinner({ className = "" }: { className?: string }) {
   return (
     <svg className={`animate-spin ${className}`} viewBox="0 0 24 24" aria-hidden="true">
@@ -47,7 +57,7 @@ function LoadingOverlay({ show }: { show: boolean }) {
     <div aria-live="assertive" className="fixed inset-0 z-[60] grid place-items-center bg-black/20 backdrop-blur-[2px]">
       <div
         className="rounded-2xl p-6 shadow-xl ring-1 ring-black/5"
-        style={{ backgroundColor: COLORS.boxBackground, border: `2px solid ${COLORS.outline}` }}
+        style={{ backgroundColor: COLORS.cardBg, border: `2px solid ${COLORS.outline}` }}
       >
         <div className="flex items-center gap-3">
           <ThinkingDots />
@@ -58,24 +68,13 @@ function LoadingOverlay({ show }: { show: boolean }) {
   );
 }
 
-/* ---------- Types + helpers ---------- */
-type Idea = {
-  category: "practical" | "creative" | "absurd";
-  title: string;
-  why: string;
-  plan: string;
-  opener: string;
-};
-function capitalize(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
+/* ---------- Helpers ---------- */
+function capitalize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function badgeClasses() { return "rounded-full px-2 py-0.5 text-xs capitalize"; }
 function badgeStyle(cat: Idea["category"]) {
-  if (cat === "practical") return { backgroundColor: COLORS.outline, color: "#FFFFFF", border: `1px solid ${COLORS.outline}` } as const;
-  if (cat === "creative")  return { backgroundColor: COLORS.topLink, color: "#FFFFFF", border: `1px solid ${COLORS.outline}` } as const;
-  return { backgroundColor: COLORS.unconventional, color: "#FFFFFF", border: `1px solid ${COLORS.outline}` } as const;
-}
-function badgeClasses() {
-  return "rounded-full px-2 py-0.5 text-xs capitalize";
+  if (cat === "practical") return { backgroundColor: COLORS.outline, color: "#fff", border: `1px solid ${COLORS.outline}` } as const;
+  if (cat === "creative")  return { backgroundColor: COLORS.topLink, color: "#fff", border: `1px solid ${COLORS.outline}` } as const;
+  return { backgroundColor: COLORS.unconventional, color: "#fff", border: `1px solid ${COLORS.outline}` } as const;
 }
 function formatShareText(it: Idea) {
   return [
@@ -83,35 +82,51 @@ function formatShareText(it: Idea) {
     `**Why it fits:** ${it.why}`,
     `**30-day plan:**\n${it.plan}`,
     `**LinkedIn opener:** ${it.opener}`,
-    "\n#CareerPivot #BrigidBot",
+    "\n#CareerPivot #Resumancer",
   ].join("\n\n");
 }
 
 /* ---------- Mood helpers ---------- */
-function moodLabel(m: number) {
-  if (m <= 3) return "Realistic";
-  if (m <= 7) return "Optimistic";
-  return "Delusional";
-}
+function moodLabel(m: number) { if (m <= 3) return "Realistic"; if (m <= 7) return "Optimistic"; return "Delusional"; }
 function moodTagline(m: number) {
   if (m <= 3) return "I’m burnt out from searching for jobs. Help me pivot quickly.";
   if (m <= 7) return "Unemployment can’t steal my shine! Let’s shake things up!";
   return "Some say I’ve lost the plot, but I call it blue sky thinking!";
 }
-function auraColor(m: number) {
-  if (m <= 3) return COLORS.unconventional;
-  if (m <= 7) return COLORS.topLink;
-  return COLORS.button;
-}
+function auraColor(m: number) { if (m <= 3) return COLORS.unconventional; if (m <= 7) return COLORS.topLink; return COLORS.button; }
+
+/* ---------- Dev fallback ideas (used only if /api/ideas fails) ---------- */
+const FALLBACK_IDEAS: Idea[] = [
+  {
+    category: "practical",
+    title: "Growth PM for mission-driven fintech",
+    why: "Your edtech + revenue chops port cleanly to regulated onboarding flows.",
+    plan: "- Week 1: Map funnel & drop-offs\n- Week 2: A/B eligibility UX\n- Week 3: Activation dashboard\n- Week 4: Retention levers",
+    opener: "I’ve scaled education products to millions—curious how you’re tackling activation vs. approval latency?",
+  },
+  {
+    category: "creative",
+    title: "AI-assisted Claims Coach prototype",
+    why: "Bridges coaching UI experience with guided, high-friction forms.",
+    plan: "- Week 1: Click-through Figma\n- Week 2: React prototype\n- Week 3: 5 usability tests\n- Week 4: Pilot metrics + rollout",
+    opener: "I built coaching UIs that reduce cognitive load—imagine that applied to claims. Want a testable MVP sketch?",
+  },
+  {
+    category: "absurd",
+    title: "‘Blue-Sky’ Residency: PM in the Wild",
+    why: "Package ambiguity as a 30-day embedded experiment.",
+    plan: "- Week 1: Shadow ops + unknowns\n- Week 2: 3 bets doc\n- Week 3: Ship a tiny win\n- Week 4: Keep/kill/scale memo",
+    opener: "Give me 30 days and a sandbox. I’ll ship one needle-moving win and leave a clear growth thesis.",
+  },
+];
 
 /* ---------- Main component ---------- */
-export default function BrigidBotPage() {
+export default function Page() {
   const [background, setBackground] = React.useState(
     "Full-stack engineer turned product strategist; shipped 3 SaaS tools; loves rapid prototyping."
   );
   const [interests, setInterests] = React.useState("climate tech, fintech, edtech, open source");
   const [mood, setMood] = React.useState(5);
-
   const [loading, setLoading] = React.useState(false);
   const [ideas, setIdeas] = React.useState<Idea[] | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -128,14 +143,12 @@ export default function BrigidBotPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ background, interests, mood }),
       });
-      if (!resp.ok) {
-        const { error, detail } = await resp.json().catch(() => ({}));
-        throw new Error(error || `HTTP ${resp.status} ${resp.statusText}${detail ? `: ${detail}` : ""}`);
-      }
-      const data = await resp.json();
-      setIdeas(data.ideas);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
+      const data = (await resp.json()) as { ideas: Idea[] };
+      setIdeas(Array.isArray(data?.ideas) ? data.ideas : FALLBACK_IDEAS);
+    } catch {
+      setError("Using mock ideas (set up /api/ideas to replace).");
+      setIdeas(FALLBACK_IDEAS);
     } finally {
       setLoading(false);
     }
@@ -158,7 +171,6 @@ export default function BrigidBotPage() {
           ta.style.position = "fixed";
           ta.style.opacity = "0";
           document.body.appendChild(ta);
-          ta.focus();
           ta.select();
           const ok = document.execCommand("copy");
           document.body.removeChild(ta);
@@ -175,74 +187,121 @@ export default function BrigidBotPage() {
   return (
     <main className="min-h-screen" style={{ backgroundColor: COLORS.page, color: COLORS.text }}>
       {/* Header */}
-      <header className="py-3">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="flex items-center h-16 gap-6 justify-between">
+      <header className="py-6">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="flex items-center justify-between gap-6">
             <Link href="/" className="flex items-center gap-3">
               {logoOk ? (
-                <Image src="/logo-shield.png" alt="Resumancer logo" width={46} height={46}
-                  className="h-[46px] w-[46px]" onError={() => setLogoOk(false)} />
+                <Image
+                  src="/logo-shield.png"
+                  alt="Resumancer logo"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10"
+                  onError={() => setLogoOk(false)}
+                />
               ) : (
-                <div className="h-[46px] w-[46px] rounded-full" style={{ backgroundColor: COLORS.outline }} />
+                <div className="h-10 w-10 rounded-full" style={{ backgroundColor: COLORS.outline }} />
               )}
               <span className="text-2xl font-extrabold" style={{ color: COLORS.h1 }}>
-                Resumancer <span style={{ color: COLORS.unconventional }}>Bot</span>
+                Resumancer
               </span>
             </Link>
-            <nav className="hidden sm:flex items-center gap-6">
-              {["Home", "About", "Contact"].map((t) => (
-                <Link key={t} href="#" className="text-sm font-semibold hover:underline"
-                  style={{ color: COLORS.topLink }}>
-                  {t}
-                </Link>
-              ))}
+
+            <nav className="flex items-center gap-4">
+              <a
+                href="#"
+                className="rounded-xl px-4 py-2 text-sm font-semibold shadow hover:brightness-95"
+                style={{ backgroundColor: "#d9ecff", color: "#0f172a" }}
+                onClick={(e) => e.preventDefault()}
+              >
+                Resume
+              </a>
+              <a
+                href="#"
+                className="rounded-xl px-4 py-2 text-sm font-semibold shadow hover:brightness-95"
+                style={{ backgroundColor: "#d9ecff", color: "#0f172a" }}
+                onClick={(e) => e.preventDefault()}
+              >
+                Contact
+              </a>
             </nav>
           </div>
         </div>
       </header>
 
-      {/* Body */}
-      <div className="mx-auto max-w-6xl px-4 py-10">
+      <div className="mx-auto max-w-6xl px-6 pb-12">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
           {/* LEFT */}
-          <section className="flex flex-col">
-            <header className="mb-6">
-              <h1 className="text-4xl font-extrabold tracking-tight" style={{ color: COLORS.h1 }}>
-                Your <span className="font-bold" style={{ color: COLORS.unconventional }}>Unconventional</span> Career Coach
-              </h1>
-              <p className="mt-1 text-sm italic" style={{ color: COLORS.text }}>
-                For those who are ready to embrace their true calling!
+          <section>
+            <h1 className="text-5xl font-extrabold leading-tight" style={{ color: COLORS.h1 }}>
+              Your <span style={{ color: COLORS.unconventional }}>Unconventional</span> Career Coach
+            </h1>
+            <p className="mt-2 italic" style={{ color: "#415a83" }}>
+              For those who are ready to embrace their true calling!
+            </p>
+
+            <div className="mt-6 space-y-4 max-w-2xl">
+              <p>
+                Job search got you down? Tired of tossing your résumé into a black hole? Wondering if it’s finally time to
+                follow that dream of becoming a professional beekeeper? You’re not alone, friend.
               </p>
-            </header>
+              <p>
+                That’s why we built a tiny tool to help you get unstuck and choose your next job adventure. Somewhere out
+                there, there’s a paycheck with your name on it, and we’re going to help you find it.
+              </p>
+            </div>
+
+            <div className="mt-6 h-px w-full" style={{ backgroundColor: "#e8d9b5" }} />
+
+            <div className="mt-6">
+              <h3 className="font-semibold" style={{ color: COLORS.h1 }}>How it works:</h3>
+              <ul className="mt-3 list-disc pl-6 space-y-1">
+                <li>Tell me your background and interests.</li>
+                <li>Adjust the slider to choose how realistic or outlandish you want the ideas.</li>
+                <li>Hit <em>Inspire me</em> and <span className="underline">watch the magic happen</span>.</li>
+                <li>
+                  Get three directions: <strong>practical</strong>, <strong>creative & adjacent</strong>, and{" "}
+                  <strong>wildly absurd</strong>.
+                </li>
+              </ul>
+            </div>
+
+            <footer className="mt-10 text-sm" style={{ color: "#5a708f" }}>
+              Built by Brigid Walsh. Fueled by caffeine and the belief that when the going gets weird, the weird turn pro.
+            </footer>
           </section>
 
-          {/* RIGHT: Inputs */}
-          <aside className="space-y-6 lg:sticky lg:top-6">
-            <div className="rounded-2xl p-5 shadow-sm"
-              style={{ backgroundColor: COLORS.boxBackground, border: `2px solid ${COLORS.outline}` }}>
+          {/* RIGHT: Inputs Card */}
+          <aside>
+            <div className="rounded-2xl p-6 shadow-md" style={{ backgroundColor: COLORS.boxBackground, border: `2px solid ${COLORS.outline}` }}>
               <label className="block">
-                <span className="font-medium" style={{ color: COLORS.text }}>Your background (one-liner is fine)</span>
+                <span className="font-medium" style={{ color: COLORS.h1 }}>Your background (one-liner is fine)</span>
                 <textarea
                   value={background}
                   onChange={(e) => setBackground(e.target.value)}
                   className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
-                  style={{ backgroundColor: "#FFFFFF", color: COLORS.text, border: `1px solid ${COLORS.outline}`, outlineColor: COLORS.topLink }}
+                  style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
                   rows={3}
                 />
               </label>
 
-              <label className="mt-5 block">
-                <span className="font-medium" style={{ color: COLORS.text }}>Interests (comma-separated)</span>
+              <label className="mt-6 block">
+                <span className="font-medium" style={{ color: COLORS.h1 }}>Interests (comma-separated)</span>
                 <input
                   value={interests}
                   onChange={(e) => setInterests(e.target.value)}
                   className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
-                  style={{ backgroundColor: "#FFFFFF", color: COLORS.text, border: `1px solid ${COLORS.outline}`, outlineColor: COLORS.topLink }}
+                  style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
                 />
               </label>
 
-              {/* Mood Slider + emoji + bottom text */}
-              <div className="mt-5">
+              {/* Mood Slider */}
+              <div className="mt-6">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium" style={{ color: COLORS.h1 }}>Mood Slider</span>
+                  <span className="text-xs">😊 balanced</span>
+                </div>
                 <input
                   type="range"
                   min={0}
@@ -252,48 +311,32 @@ export default function BrigidBotPage() {
                   className="mt-2 w-full"
                   style={{ accentColor: COLORS.topLink }}
                 />
-                <div className="mt-2 flex justify-between text-base">
-                  <span>😑</span><span>😁</span><span>🤪</span>
-                </div>
-                <div className="mt-2 flex justify-between text-xs" style={{ color: COLORS.text }}>
-                  <span className="w-1/3 text-left pr-2 leading-snug">
-                    I’m burnt out from searching for jobs.<br />Help me pivot quickly.
-                  </span>
-                  <span className="w-1/3 text-center leading-snug">
-                    Unemployment can’t steal my shine!<br />Let’s shake things up!
-                  </span>
-                  <span className="w-1/3 text-right pl-2 leading-snug">
-                    Some call me crazy.<br />I call me innovative.
-                  </span>
+                <div className="mt-2 grid grid-cols-3 text-xs">
+                  <span className="text-left">dead inside</span>
+                  <span className="text-center">accepting the slog</span>
+                  <span className="text-right">ready to crush it</span>
                 </div>
 
-                <div className="mt-4 text-left">
-                  <p className="font-extrabold text-xl" style={{ color: auraColor(mood) }}>{moodLabel(mood)}</p>
-                  <p className="text-sm italic" style={{ color: COLORS.text }}>{moodTagline(mood)}</p>
+                <div className="mt-4">
+                  <p className="text-base font-extrabold" style={{ color: auraColor(mood) }}>{moodLabel(mood)}</p>
+                  <p className="text-sm italic">{moodTagline(mood)}</p>
                 </div>
               </div>
 
-              {/* Button with spinner */}
-              <div className="mt-5 flex items-center gap-3">
+              {/* CTA */}
+              <div className="mt-6">
                 <button
                   onClick={generate}
                   disabled={loading}
-                  className="inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-white shadow-sm hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2"
-                  style={{ backgroundColor: COLORS.button, outlineColor: COLORS.button }}
+                  className="inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-white shadow-md hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 transition"
+                  style={{ backgroundColor: COLORS.button }}
                   aria-busy={loading}
                 >
                   {loading ? (<><Spinner className="h-4 w-4" />Generating…</>) : ("Inspire me")}
                 </button>
-                {error && <span className="text-sm" style={{ color: COLORS.unconventional }}>Error: {error}</span>}
+                {error && <span className="ml-3 text-sm" style={{ color: COLORS.unconventional }}>Error: {error}</span>}
               </div>
             </div>
-
-            {!ideas && (
-              <div className="rounded-2xl p-5 shadow-sm"
-                   style={{ backgroundColor: COLORS.boxBackground, border: `2px solid ${COLORS.outline}` }}>
-                <p style={{ color: COLORS.text }}>Your ideas will appear below after you click Inspire me.</p>
-              </div>
-            )}
           </aside>
         </div>
 
@@ -306,9 +349,11 @@ export default function BrigidBotPage() {
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {ideas.map((it, i) => (
-                <article key={i}
+                <article
+                  key={i}
                   className="rounded-2xl p-5 shadow-sm flex flex-col min-h-[260px]"
-                  style={{ backgroundColor: COLORS.boxBackground, border: `2px solid ${COLORS.outline}` }}>
+                  style={{ backgroundColor: COLORS.cardBg, border: `2px solid ${COLORS.outline}` }}
+                >
                   <div className="flex-1">
                     <div className="mb-1 flex items-center justify-between">
                       <h3 className="text-lg font-semibold" style={{ color: COLORS.h1 }}>{i + 1}) {it.title}</h3>
@@ -332,13 +377,9 @@ export default function BrigidBotPage() {
             </div>
           </section>
         )}
-
-        <footer className="mt-6 text-xs" style={{ color: COLORS.text }}>
-          Built by Brigid Walsh. Fueled by caffeine and the belief that when the going gets weird, the weird turn pro.
-        </footer>
       </div>
 
-      {/* Loading overlay + keyframes */}
+      {/* Full-screen overlay + keyframes */}
       <LoadingOverlay show={loading} />
       <style>{`@keyframes bb-bounce { 0%, 80%, 100% { transform: translateY(0); opacity: .6; } 40% { transform: translateY(-6px); opacity: 1; } }`}</style>
     </main>
