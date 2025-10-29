@@ -5,7 +5,7 @@ import Image from "next/image";
 
 /* ---------- Theme (your new palette) ---------- */
 const COLORS = {
-  page: "#B3DD98",          // Background
+  page: "#EAF6D3 ",          // Background
   topLink: "#678AF4",       // Top link buttons / accents
   h1: "#5D3067",            // H1 text
   unconventional: "#00C588",// 'Unconventional' word
@@ -13,7 +13,7 @@ const COLORS = {
   outline: "#224074",       // Borders / outlines
   button: "#A960A1",        // Inspire Me button
   cardBg: "#FFFFFF",        // Card background
-  boxBackground: "#EAF6D3", // Right-panel card bg
+  boxBackground: "#B3DD98", // Right-panel card bg
 } as const;
 
 /* ---------- Types ---------- */
@@ -89,9 +89,9 @@ function formatShareText(it: Idea) {
 /* ---------- Mood helpers ---------- */
 function moodLabel(m: number) { if (m <= 3) return "Realistic"; if (m <= 7) return "Optimistic"; return "Delusional"; }
 function moodTagline(m: number) {
-  if (m <= 3) return "I’m burnt out from searching for jobs. Help me pivot quickly.";
-  if (m <= 7) return "Unemployment can’t steal my shine! Let’s shake things up!";
-  return "Some say I’ve lost the plot, but I call it blue sky thinking!";
+  if (m <= 3) return "Practical advice for the burnt out job searcher.";
+  if (m <= 7) return "Creative advice for the person who is still ready to take on the world despite no paycheck in 6 months.";
+  return "Absurd advice. What's the point of working anyways? I think I'll just turn feral.";
 }
 function auraColor(m: number) { if (m <= 3) return COLORS.unconventional; if (m <= 7) return COLORS.topLink; return COLORS.button; }
 
@@ -126,7 +126,7 @@ export default function Page() {
     "Full-stack engineer turned product strategist; shipped 3 SaaS tools; loves rapid prototyping."
   );
   const [interests, setInterests] = React.useState("climate tech, fintech, edtech, open source");
-  const [mood, setMood] = React.useState(5);
+  const [mood, setMood] = React.useState(5); // <-- use mood everywhere (API + results badge)
   const [loading, setLoading] = React.useState(false);
   const [ideas, setIdeas] = React.useState<Idea[] | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -141,7 +141,7 @@ export default function Page() {
       const resp = await fetch("/api/ideas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ background, interests, mood }),
+        body: JSON.stringify({ background, interests, mood }), // <-- mood is defined
       });
       if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
       const data = (await resp.json()) as { ideas: Idea[] };
@@ -261,8 +261,8 @@ export default function Page() {
                 <li>Adjust the slider to choose how realistic or outlandish you want the ideas.</li>
                 <li>Hit <em>Inspire me</em> and <span className="underline">watch the magic happen</span>.</li>
                 <li>
-                  Get three directions: <strong>practical</strong>, <strong>creative & adjacent</strong>, and{" "}
-                  <strong>wildly absurd</strong>.
+                  Get three directions: <strong>realistic</strong>, <strong>optimistic</strong>, and{" "}
+                  <strong>delusional</strong>.
                 </li>
               </ul>
             </div>
@@ -296,30 +296,38 @@ export default function Page() {
                 />
               </label>
 
-              {/* Mood Slider */}
-              <div className="mt-6">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium" style={{ color: COLORS.h1 }}>Mood Slider</span>
-                  <span className="text-xs">😊 balanced</span>
+              {/* ---- Mood Slider (inline; NO border, emojis tight, fixed-height text) ---- */}
+              <div className="w-full rounded-2xl mt-6">
+                {/* Header: left = bold title, right = dynamic label */}
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-base font-semibold leading-none">Mood Slider</h3>
+                  <div className="text-sm md:text-base">{moodLabel(mood)}</div>
                 </div>
+
+                {/* Slider */}
                 <input
                   type="range"
                   min={0}
                   max={10}
+                  step={1}
                   value={mood}
-                  onChange={(e) => setMood(Number(e.target.value))}
-                  className="mt-2 w-full"
-                  style={{ accentColor: COLORS.topLink }}
+                  onChange={(e) => setMood(parseInt(e.target.value, 10))}
+                  className="w-full"
+                  aria-label="Mood slider from 0 to 10"
                 />
-                <div className="mt-2 grid grid-cols-3 text-xs">
-                  <span className="text-left">dead inside</span>
-                  <span className="text-center">accepting the slog</span>
-                  <span className="text-right">ready to crush it</span>
+
+                {/* Emoji ticks: left/middle/right, close to slider */}
+                <div className="pt-[3px] flex w-full justify-between text-xl select-none">
+                  <span aria-hidden="true">😑</span>
+                  <span aria-hidden="true">😁</span>
+                  <span aria-hidden="true">🤪</span>
                 </div>
 
-                <div className="mt-4">
-                  <p className="text-base font-extrabold" style={{ color: auraColor(mood) }}>{moodLabel(mood)}</p>
-                  <p className="text-sm italic">{moodTagline(mood)}</p>
+                {/* Under-slider copy (no heading word, fixed height so card doesn't jump) */}
+                <div className="mt-3 h-[48px] overflow-hidden">
+                  <p className="text-sm md:text-base leading-snug">
+                    {moodTagline(mood)}
+                  </p>
                 </div>
               </div>
 
@@ -385,4 +393,3 @@ export default function Page() {
     </main>
   );
 }
-

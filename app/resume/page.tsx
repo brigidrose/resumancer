@@ -8,7 +8,7 @@ import { useEffect } from "react";
    Fix: ensure COLORS object has valid JS syntax (no stray '#'), all values hex.
 --------------------------------------------------------------------------- */
 const COLORS = {
-  page: "#B3DD98",           // Page background
+  page: "#EAF6D3",           // Page background
   topLink: "#678AF4",        // Accent links / pills
   h1: "#5D3067",             // Headings
   unconventional: "#00C588", // Accent highlight
@@ -16,7 +16,7 @@ const COLORS = {
   outline: "#224074",         // Borders / outlines
   button: "#A960A1",         // Buttons
   cardBg: "#FFFFFF",         // Card background
-  boxBackground: "#EAF6D3",  // Subtle card bg
+  boxBackground: "#B3DD98",  // Subtle card bg
 } as const;
 
 /* ------------------------------ Lightweight Tests ------------------------------
