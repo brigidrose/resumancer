@@ -134,25 +134,35 @@ export default function Page() {
   const [copiedIdx, setCopiedIdx] = React.useState<number | null>(null);
 
   async function generate() {
-    setLoading(true);
-    setError(null);
-    setIdeas(null);
-    try {
-      const resp = await fetch("/api/ideas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ background, interests, mood }), // <-- mood is defined
-      });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
-      const data = (await resp.json()) as { ideas: Idea[] };
-      setIdeas(Array.isArray(data?.ideas) ? data.ideas : FALLBACK_IDEAS);
-    } catch {
-      setError("Using mock ideas (set up /api/ideas to replace).");
-      setIdeas(FALLBACK_IDEAS);
-    } finally {
-      setLoading(false);
+  setLoading(true);
+  setError(null);
+
+  try {
+    const resp = await fetch("/api/ideas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ background, interests, mood }),
+    });
+
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => "");
+      throw new Error(`HTTP ${resp.status} ${resp.statusText}${text ? ` — ${text}` : ""}`);
     }
+
+    const data = (await resp.json()) as { ideas?: Idea[] };
+    if (!data?.ideas || !Array.isArray(data.ideas) || data.ideas.length === 0) {
+      throw new Error("API returned no ideas");
+    }
+
+    setIdeas(data.ideas);
+  } catch (err: any) {
+    setIdeas(null); // no more fallback; just show error
+    setError(err?.message || "Failed to fetch ideas");
+  } finally {
+    setLoading(false);
   }
+}
+
 
   function shareIdea(it: Idea, idx: number) {
     const text = formatShareText(it);
