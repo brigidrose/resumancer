@@ -1,8 +1,10 @@
 import "../styles/globals.css";
 
+const SITE_URL = "https://resumancer.app";
+
 export const metadata = {
   title: "Resumancer",
-  description: "Brigid Bot – Resumancer",
+  description: "Unconventional Marketability Coach",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

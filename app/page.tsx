@@ -3,6 +3,8 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
+const SITE_URL = "https://resumancer.app";
+
 /* ---------- Theme (your new palette) ---------- */
 const COLORS = {
   page: "#EAF6D3 ",          // Background
@@ -223,19 +225,22 @@ export default function Page() {
             </Link>
 
             <nav className="flex items-center gap-4">
+              {/*Resume button*/}
               <a
-                href="#"
+                href="https://resumancer.app/resume"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="rounded-xl px-4 py-2 text-sm font-semibold shadow hover:brightness-95"
                 style={{ backgroundColor: "#d9ecff", color: "#0f172a" }}
-                onClick={(e) => e.preventDefault()}
+              
               >
                 Resume
               </a>
               <a
-                href="#"
+                href="mailto:brigidrose@gmail.com"
                 className="rounded-xl px-4 py-2 text-sm font-semibold shadow hover:brightness-95"
                 style={{ backgroundColor: "#d9ecff", color: "#0f172a" }}
-                onClick={(e) => e.preventDefault()}
+                
               >
                 Contact
               </a>
@@ -249,20 +254,20 @@ export default function Page() {
           {/* LEFT */}
           <section>
             <h1 className="text-5xl font-extrabold leading-tight" style={{ color: COLORS.h1 }}>
-              Your <span style={{ color: COLORS.unconventional }}>Unconventional</span> Career Coach
+              Your <span style={{ color: COLORS.unconventional }}>Unconventional</span> Marketability Coach
             </h1>
             <p className="mt-2 italic" style={{ color: "#415a83" }}>
-              For those who are ready to embrace their true calling!
+              For the overqualified, under-noticed, and existentially unemployed.
             </p>
 
             <div className="mt-6 space-y-4 max-w-2xl">
               <p>
-                Job search got you down? Tired of tossing your résumé into a black hole? Wondering if it’s finally time to
-                follow that dream of becoming a professional beekeeper? You’re not alone, friend.
+                Feeling invisible on LinkedIn? Wondering if you've been tossing your resumes into a blackhole? 
+                Realizing your new job manifestations just haven't been delivering? Well my friend, you are not alone.
               </p>
               <p>
-                That’s why we built a tiny tool to help you get unstuck and choose your next job adventure. Somewhere out
-                there, there’s a paycheck with your name on it, and we’re going to help you find it.
+                Resumancer will help you find practical, creative and even absurd ways to zhuzh your online presence and help you stand out amongst the crowd! 
+                Think of it as a professional glow-up. Somewhere out there, there's a paycheck with your name on it, and Resumancer is going to help you find it!
               </p>
             </div>
 
