@@ -1,112 +1,154 @@
-// app/api/ideas/route.ts
-import { NextResponse } from "next/server";
-
+import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 type Idea = {
   category: "practical" | "creative" | "absurd";
   title: string;
   why: string;
-  plan: string;   // 4 short lines separated by \n
-  opener: string; // one-sentence DM-style opener
+  plan: string;
+  opener: string;
 };
 
-export async function POST(req: Request) {
-  try {
-    const { background, interests, mood } = await req.json();
+function moodProfile(mood: number) {
+  const m = Math.max(0, Math.min(10, Math.round(mood)));
+  const practical = Math.max(0, 1 - m / 6);
+  const absurd = Math.max(0, (m - 4) / 6);
+  const creative = 1 - Math.abs(m - 5) / 5;
+  const sum = practical + creative + absurd || 1;
+  const weights = {
+    practical: practical / sum,
+    creative: creative / sum,
+    absurd: absurd / sum,
+  };
+  const temperature = 0.2 + (m / 10) * 0.6;
+  const scope = m < 3 ? "tight, incremental"
+            : m < 7 ? "balanced, ambitious but feasible"
+                    : "wild, moonshot, rule-bending";
+  const budget = m < 3 ? "under $500 and within 1 week"
+             : m < 7 ? "reasonable budget within 1–4 weeks"
+                     : "ignore budget; optimize for spectacle";
+  const risk =  m < 3 ? "minimize risk; high feasibility"
+             : m < 7 ? "moderate risk; good upside"
+                     : "accept high risk and unknowns";
+  return { m, weights, temperature, scope, budget, risk };
+}
 
-    if (!background || !interests || typeof mood !== "number") {
-      return NextResponse.json(
-        { error: "Missing required fields: background, interests, mood (number 0–10)" },
-        { status: 400 }
-      );
-    }
-
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "Missing OPENAI_API_KEY environment variable" },
-        { status: 500 }
-      );
-    }
-
-    const bucket = mood <= 3 ? "realistic" : mood <= 7 ? "optimistic" : "delusional";
-
-    const system = `
-You are a careers strategist. Respond ONLY with JSON matching:
-{"ideas":[{"category":"practical"|"creative"|"absurd","title":string,"why":string,"plan":string,"opener":string}, ...]}
-Rules:
-- Exactly 3 ideas: one practical, one creative, one absurd.
-- "plan" is a concise 4-step 30-day plan; each step on its own line separated by \\n.
-- Tailor to the user details; keep it specific and useful.
-`.trim();
-
-    const user = `
-Background: ${background}
-Interests: ${interests}
-Mood bucket: ${bucket}
-`.trim();
-
-    // Call OpenAI chat completions with JSON response
+async function callOpenAI(payload: any, retries = 2, delayMs = 600) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: user },
-        ],
-        temperature: 0.8,
-        response_format: { type: "json_object" },
-      }),
+      body: JSON.stringify(payload),
     });
 
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => "");
-      return NextResponse.json(
-        { error: `OpenAI error ${resp.status} ${resp.statusText}${text ? ` — ${text}` : ""}` },
-        { status: 502 }
-      );
+    if (resp.ok) return resp.json();
+
+    // If rate limited or transient error, backoff then retry
+    if (resp.status === 429 || resp.status >= 500) {
+      if (attempt < retries) {
+        await new Promise(r => setTimeout(r, delayMs * (attempt + 1)));
+        continue;
+      }
     }
 
-    const data = await resp.json();
-    const content = data?.choices?.[0]?.message?.content;
+    // Non-retryable or out of retries: throw with error text
+    const text = await resp.text();
+    throw new Error(`OpenAI error ${resp.status}: ${text}`);
+  }
+}
 
-    if (!content) {
-      return NextResponse.json({ error: "No content from model" }, { status: 502 });
-    }
+export async function POST(req: NextRequest) {
+  try {
+    const { mood = 5, topic = "portfolio/career projects" } = await req.json();
+    const { m, weights, temperature, scope, budget, risk } = moodProfile(mood);
 
-    let parsed: { ideas?: Idea[] };
+    const system = "Return ONLY JSON that matches the schema.";
+    const user = `
+Topic: ${topic}
+Mood: ${m}
+Scope: ${scope}
+Budget: ${budget}
+Risk: ${risk}
+Weights: practical=${weights.practical.toFixed(2)}, creative=${weights.creative.toFixed(2)}, absurd=${weights.absurd.toFixed(2)}
+
+Return an object with key "ideas" containing exactly 3 items (categories: practical, creative, absurd).
+Each item has keys: category, title, why, plan, opener.
+`;
+
+    const payload = {
+      model: "gpt-4o-mini",
+      temperature,
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "ideas",
+          schema: {
+            type: "object",
+            properties: {
+              ideas: {
+                type: "array",
+                minItems: 3,
+                maxItems: 3,
+                items: {
+                  type: "object",
+                  properties: {
+                    category: { type: "string", enum: ["practical", "creative", "absurd"] },
+                    title: { type: "string" },
+                    why: { type: "string" },
+                    plan: { type: "string" },
+                    opener: { type: "string" }
+                  },
+                  required: ["category","title","why","plan","opener"],
+                  additionalProperties: false
+                }
+              }
+            },
+            required: ["ideas"],
+            additionalProperties: false
+          }
+        }
+      },
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user }
+      ]
+    };
+
+    const data = await callOpenAI(payload);
+    const content = data?.choices?.[0]?.message?.content ?? "";
+
+    // Parse safely (schema should already guarantee shape)
+    let ideas: Idea[] = [];
     try {
-      parsed = JSON.parse(content);
-    } catch {
-      return NextResponse.json({ error: "Model returned non-JSON content" }, { status: 502 });
+      const parsed = JSON.parse(content);
+      ideas = parsed.ideas as Idea[];
+    } catch (e) {
+      // As a fallback, try to parse a bare array
+      try {
+        const arr = JSON.parse(content);
+        ideas = Array.isArray(arr) ? arr : [];
+      } catch {
+        ideas = [];
+      }
     }
 
-    const ideas = parsed?.ideas;
-    if (!ideas || !Array.isArray(ideas) || ideas.length !== 3) {
-      return NextResponse.json({ error: "Malformed ideas payload (need 3 items)" }, { status: 502 });
-    }
-
-    // Light validation for categories presence
-    const cats = new Set(ideas.map(i => i.category));
-    if (!cats.has("practical") || !cats.has("creative") || !cats.has("absurd")) {
+    if (!ideas || ideas.length !== 3) {
+      // Helpful debug response to see what came back
       return NextResponse.json(
-        { error: "Ideas must include categories: practical, creative, absurd" },
-        { status: 502 }
+        { error: "API returned no ideas", raw: content, mood: m },
+        { status: 200 }
       );
     }
 
-    return NextResponse.json({ ideas }, { status: 200 });
+    return NextResponse.json({ ideas, mood: m, temperature });
+
   } catch (err: any) {
     return NextResponse.json(
-      { error: err?.message || "Unknown server error" },
+      { error: err.message ?? "Unknown error" },
       { status: 500 }
     );
   }
 }
-

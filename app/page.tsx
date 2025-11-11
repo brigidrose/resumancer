@@ -72,19 +72,38 @@ function LoadingOverlay({ show }: { show: boolean }) {
 function capitalize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
 function badgeClasses() { return "rounded-full px-2 py-0.5 text-xs capitalize"; }
 function badgeStyle(cat: Idea["category"]) {
-  if (cat === "practical") return { backgroundColor: COLORS.outline, color: "#fff", border: `1px solid ${COLORS.outline}` } as const;
-  if (cat === "creative")  return { backgroundColor: COLORS.topLink, color: "#fff", border: `1px solid ${COLORS.outline}` } as const;
-  return { backgroundColor: COLORS.unconventional, color: "#fff", border: `1px solid ${COLORS.outline}` } as const;
+  if (cat === "practical") return { backgroundColor: "#28B7EC", color: "#fff", border: "1px solid #28B7EC" } as const;
+  if (cat === "creative")  return { backgroundColor: "#BB92DC", color: "#fff", border: "1px solid #BB92DC" } as const;
+  return { backgroundColor: "#EE53C7", color: "#fff", border: "1px solid #EE53C7" } as const;
 }
+
 function formatShareText(it: Idea) {
+  const siteURL = "https://resumancer.example.com"; // placeholder until live
+  const icons: Record<Idea["category"], string> = {
+    practical: "🔧",
+    creative: "🎨",
+    absurd: "🦄",
+  };
+
   return [
-    `**${capitalize(it.category)} — ${it.title}**`,
-    `**Why it fits:** ${it.why}`,
-    `**30-day plan:**\n${it.plan}`,
-    `**LinkedIn opener:** ${it.opener}`,
-    "\n#CareerPivot #Resumancer",
+    `🚀 Ever feel stuck trying to figure out your next career move?`,
+    `I built **Resumancer**, a little AI experiment that mixes realism, optimism, and a bit of delusion to spark new career ideas. Here’s what it came up with for me today 👇`,
+    ``,
+    `${icons[it.category]} **${capitalize(it.category)} Idea: ${it.title}**`,
+    ``,
+    `💡 **Why it fits:** ${it.why}`,
+    ``,
+    `🗓️ **30-Day Plan:**`,
+    `${it.plan}`,
+    ``,
+    `💬 **LinkedIn opener:** "${it.opener}"`,
+    ``,
+    `🌐 Try it yourself at [Resumancer](${siteURL}) — built by [Brigid Walsh](https://www.linkedin.com/in/brigidrose/).`,
+    ``,
+    `#CareerPivot #Resumancer #JobSearch #CareerChange #Inspiration`,
   ].join("\n\n");
 }
+
 
 /* ---------- Mood helpers ---------- */
 function moodLabel(m: number) { if (m <= 3) return "Realistic"; if (m <= 7) return "Optimistic"; return "Delusional"; }
@@ -95,74 +114,59 @@ function moodTagline(m: number) {
 }
 function auraColor(m: number) { if (m <= 3) return COLORS.unconventional; if (m <= 7) return COLORS.topLink; return COLORS.button; }
 
-/* ---------- Dev fallback ideas (used only if /api/ideas fails) ---------- */
-const FALLBACK_IDEAS: Idea[] = [
-  {
-    category: "practical",
-    title: "Growth PM for mission-driven fintech",
-    why: "Your edtech + revenue chops port cleanly to regulated onboarding flows.",
-    plan: "- Week 1: Map funnel & drop-offs\n- Week 2: A/B eligibility UX\n- Week 3: Activation dashboard\n- Week 4: Retention levers",
-    opener: "I’ve scaled education products to millions—curious how you’re tackling activation vs. approval latency?",
-  },
-  {
-    category: "creative",
-    title: "AI-assisted Claims Coach prototype",
-    why: "Bridges coaching UI experience with guided, high-friction forms.",
-    plan: "- Week 1: Click-through Figma\n- Week 2: React prototype\n- Week 3: 5 usability tests\n- Week 4: Pilot metrics + rollout",
-    opener: "I built coaching UIs that reduce cognitive load—imagine that applied to claims. Want a testable MVP sketch?",
-  },
-  {
-    category: "absurd",
-    title: "‘Blue-Sky’ Residency: PM in the Wild",
-    why: "Package ambiguity as a 30-day embedded experiment.",
-    plan: "- Week 1: Shadow ops + unknowns\n- Week 2: 3 bets doc\n- Week 3: Ship a tiny win\n- Week 4: Keep/kill/scale memo",
-    opener: "Give me 30 days and a sandbox. I’ll ship one needle-moving win and leave a clear growth thesis.",
-  },
-];
-
 /* ---------- Main component ---------- */
 export default function Page() {
   const [background, setBackground] = React.useState(
     "Full-stack engineer turned product strategist; shipped 3 SaaS tools; loves rapid prototyping."
   );
   const [interests, setInterests] = React.useState("climate tech, fintech, edtech, open source");
-  const [mood, setMood] = React.useState(5); // <-- use mood everywhere (API + results badge)
-  const [loading, setLoading] = React.useState(false);
+  const [mood, setMood] = React.useState(5);
   const [ideas, setIdeas] = React.useState<Idea[] | null>(null);
+  const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [logoOk, setLogoOk] = React.useState(true);
   const [copiedIdx, setCopiedIdx] = React.useState<number | null>(null);
 
+  // Only call API when user clicks "Inspire me"
+  const abortRef = React.useRef<AbortController | null>(null);
   async function generate() {
-  setLoading(true);
-  setError(null);
+    // cancel any in-flight request if user double-clicks
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-  try {
-    const resp = await fetch("/api/ideas", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ background, interests, mood }),
-    });
+    setLoading(true);
+    setError(null);
 
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => "");
-      throw new Error(`HTTP ${resp.status} ${resp.statusText}${text ? ` — ${text}` : ""}`);
+    try {
+      const resp = await fetch("/api/ideas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ background, interests, mood }),
+        signal: controller.signal,
+      });
+
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => "");
+        throw new Error(`HTTP ${resp.status} ${resp.statusText}${text ? ` — ${text}` : ""}`);
+      }
+
+      const data = (await resp.json()) as { ideas?: Idea[]; error?: string; raw?: any };
+      if (!data?.ideas || !Array.isArray(data.ideas) || data.ideas.length === 0) {
+        // Surface debug info in console if backend returned raw
+        if (data?.raw) console.debug("RAW from /api/ideas:", data.raw);
+        throw new Error(data?.error || "API returned no ideas");
+      }
+
+      setIdeas(data.ideas);
+    } catch (err: any) {
+      if (err?.name === "AbortError") return; // user triggered a new request
+      setIdeas(null);
+      setError(err?.message || "Failed to fetch ideas");
+    } finally {
+      setLoading(false);
     }
-
-    const data = (await resp.json()) as { ideas?: Idea[] };
-    if (!data?.ideas || !Array.isArray(data.ideas) || data.ideas.length === 0) {
-      throw new Error("API returned no ideas");
-    }
-
-    setIdeas(data.ideas);
-  } catch (err: any) {
-    setIdeas(null); // no more fallback; just show error
-    setError(err?.message || "Failed to fetch ideas");
-  } finally {
-    setLoading(false);
   }
-}
-
 
   function shareIdea(it: Idea, idx: number) {
     const text = formatShareText(it);
@@ -277,9 +281,7 @@ export default function Page() {
               </ul>
             </div>
 
-            <footer className="mt-10 text-sm" style={{ color: "#5a708f" }}>
-              Built by Brigid Walsh. Fueled by caffeine and the belief that when the going gets weird, the weird turn pro.
-            </footer>
+         
           </section>
 
           {/* RIGHT: Inputs Card */}
@@ -306,15 +308,13 @@ export default function Page() {
                 />
               </label>
 
-              {/* ---- Mood Slider (inline; NO border, emojis tight, fixed-height text) ---- */}
+              {/* ---- Mood Slider (no auto-fetch) ---- */}
               <div className="w-full rounded-2xl mt-6">
-                {/* Header: left = bold title, right = dynamic label */}
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-base font-semibold leading-none">Mood Slider</h3>
                   <div className="text-sm md:text-base">{moodLabel(mood)}</div>
                 </div>
 
-                {/* Slider */}
                 <input
                   type="range"
                   min={0}
@@ -326,14 +326,12 @@ export default function Page() {
                   aria-label="Mood slider from 0 to 10"
                 />
 
-                {/* Emoji ticks: left/middle/right, close to slider */}
                 <div className="pt-[3px] flex w-full justify-between text-xl select-none">
                   <span aria-hidden="true">😑</span>
                   <span aria-hidden="true">😁</span>
                   <span aria-hidden="true">🤪</span>
                 </div>
 
-                {/* Under-slider copy (no heading word, fixed height so card doesn't jump) */}
                 <div className="mt-3 h-[48px] overflow-hidden">
                   <p className="text-sm md:text-base leading-snug">
                     {moodTagline(mood)}
@@ -363,20 +361,31 @@ export default function Page() {
           <section className="mt-10">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-xl font-semibold" style={{ color: COLORS.h1 }}>Your ideas</h2>
-              <span className="text-xs" style={{ color: auraColor(mood) }}>{moodLabel(mood)}</span>
+              
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {ideas.map((it, i) => (
-                <article
-                  key={i}
-                  className="rounded-2xl p-5 shadow-sm flex flex-col min-h-[260px]"
-                  style={{ backgroundColor: COLORS.cardBg, border: `2px solid ${COLORS.outline}` }}
-                >
-                  <div className="flex-1">
-                    <div className="mb-1 flex items-center justify-between">
-                      <h3 className="text-lg font-semibold" style={{ color: COLORS.h1 }}>{i + 1}) {it.title}</h3>
-                      <span className={badgeClasses()} style={badgeStyle(it.category)}>{it.category}</span>
-                    </div>
+               <article
+  key={i}
+  className="relative rounded-2xl p-5 shadow-sm flex flex-col min-h-[260px]"
+  style={{ backgroundColor: COLORS.cardBg, border: `2px solid ${COLORS.outline}` }}
+>
+  {/* fixed-position pill */}
+  <span
+    className={`${badgeClasses()} absolute top-4 right-4`}
+    style={badgeStyle(it.category)}
+  >
+    {it.category}
+  </span>
+
+  <div className="flex-1">
+    <div className="mb-1">
+      <h3 className="pr-20 text-lg font-semibold" style={{ color: COLORS.h1 }}>
+        {i + 1}) {it.title}
+      </h3>
+    </div>
+    ...
+
                     <p className="text-sm"><span className="font-medium" style={{ color: COLORS.h1 }}>Why it fits:</span> {it.why}</p>
                     <p className="mt-2 whitespace-pre-line text-sm"><span className="font-medium" style={{ color: COLORS.h1 }}>30-day plan:</span>{"\n"}{it.plan}</p>
                     <p className="mt-2 text-sm"><span className="font-medium" style={{ color: COLORS.h1 }}>LinkedIn opener:</span> <span style={{ color: COLORS.unconventional }}>{it.opener}</span></p>
@@ -395,6 +404,12 @@ export default function Page() {
             </div>
           </section>
         )}
+{ideas && (
+  <p className="mt-10 text-sm text-center" style={{ color: "#5a708f" }}>
+    Built by Brigid Walsh. Fueled by caffeine and the belief that when the going gets weird, the weird turn pro.
+  </p>
+)}
+
       </div>
 
       {/* Full-screen overlay + keyframes */}
