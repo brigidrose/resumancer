@@ -62,21 +62,68 @@ async function callOpenAI(payload: any, retries = 2, delayMs = 600) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { mood = 5, topic = "portfolio/career projects" } = await req.json();
+    const body = await req.json();
+    const {
+      mood = 5,
+      background = "",
+      targetRole = "",
+      industry = "",
+      skills = [] as string[],
+      interests = [] as string[],
+      constraints = { remoteOnly: false, noCoding: false, partTimeOk: false },
+      timeHorizon = "30 days",
+    } = body;
+
     const { m, weights, temperature, scope, budget, risk } = moodProfile(mood);
+
+    const constraintText = [
+      constraints.remoteOnly ? "remote only" : null,
+      constraints.noCoding ? "no coding" : null,
+      constraints.partTimeOk ? "part-time OK" : null,
+    ].filter(Boolean).join(", ") || "none";
 
     const system = "Return ONLY JSON that matches the schema.";
     const user = `
-Topic: ${topic}
-Mood: ${m}
-Scope: ${scope}
-Budget: ${budget}
-Risk: ${risk}
-Weights: practical=${weights.practical.toFixed(2)}, creative=${weights.creative.toFixed(2)}, absurd=${weights.absurd.toFixed(2)}
+You are generating ideas for a JOB SEEKER, not a team already in-role.
 
-Return an object with key "ideas" containing exactly 3 items (categories: practical, creative, absurd).
-Each item has keys: category, title, why, plan, opener.
+Context:
+- Background: ${background || "(not provided)"}
+- Target role: ${targetRole || "(not provided)"}
+- Industry: ${industry || "(not provided)"}
+- Skills/strengths: ${skills.length ? skills.join(", ") : "(none)"}
+- Interests/hobbies: ${interests.length ? interests.join(", ") : "(none)"}
+- Constraints: ${constraintText}
+- Time horizon: ${timeHorizon}
+- Mood: ${m} (scope=${scope}; budget=${budget}; risk=${risk})
+- Weights: practical=${weights.practical.toFixed(2)}, creative=${weights.creative.toFixed(2)}, absurd=${weights.absurd.toFixed(2)}
+
+Previous idea titles (avoid repeating or rephrasing): ${Array.isArray(body.previousTitles) && body.previousTitles.length ? body.previousTitles.join(" | ") : "(none)"}
+Novelty seed (nondeterminism hint): ${body.noveltySeed ?? "none"}
+
+INSTRUCTIONS (tailored for transitioners / job seekers):
+- Output exactly 3 ideas: categories = practical, creative, absurd.
+- Each idea must help the job seeker create PUBLIC PROOF (a portfolio artifact) that hiring managers can see within the time horizon.
+- Optimize for RESUME bullets, LINKEDIN posts, and a SHAREABLE LINK (GitHub, Notion, Figma, Loom, live demo).
+- Tie each idea directly to the target role + industry. Name concrete tools (Figma, Mixpanel, Amplitude, SQL, Python, Airtable, Bubble, Retool, Webflow, etc) and artifacts (case study, teardown, dashboard, prototype, experiment readout).
+- Respect constraints: if remote only → remote-friendly artifact; if no coding → no-code tools; if part-time → scope down.
+- Avoid generic “do research / network” advice. Be specific: audience, data sources, steps, and a success metric.
+- Ideas must be materially different from each other and from "Previous idea titles".
+
+Return JSON with exactly 3 objects, in this order:
+[
+  { "category":"practical","title":"...","why":"...","plan":"...","opener":"..." },
+  { "category":"creative","title":"...","why":"...","plan":"...","opener":"..." },
+  { "category":"absurd","title":"...","why":"...","plan":"...","opener":"..." }
+]
+
+Definitions:
+- "plan": 5–8 short lines: artifact to build, tools, scope for ${timeHorizon}, distribution (where to post), and a measurable outcome (e.g., 50 survey completes, 1k views, 2 recruiter replies, 1 demo booked).
+- "opener": a punchy LinkedIn opener to share the artifact and invite feedback.
 `;
+
+    // ... keep your existing payload with response_format: json_schema ...
+    // (no change needed except swapping the `user` content above)
+
 
     const payload = {
       model: "gpt-4o-mini",

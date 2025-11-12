@@ -118,16 +118,27 @@ function auraColor(m: number) { if (m <= 3) return COLORS.unconventional; if (m 
 
 /* ---------- Main component ---------- */
 export default function Page() {
-  const [background, setBackground] = React.useState(
-    "Full-stack engineer turned product strategist; shipped 3 SaaS tools; loves rapid prototyping."
-  );
-  const [interests, setInterests] = React.useState("climate tech, fintech, edtech, open source");
-  const [mood, setMood] = React.useState(5);
-  const [ideas, setIdeas] = React.useState<Idea[] | null>(null);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+ // NEW structured inputs
   const [logoOk, setLogoOk] = React.useState(true);
-  const [copiedIdx, setCopiedIdx] = React.useState<number | null>(null);
+const [background, setBackground] = React.useState("Full-stack engineer turned product strategist; shipped 3 SaaS tools; loves rapid prototyping.");
+const [targetRole, setTargetRole] = React.useState("Product Manager");
+const [industry, setIndustry] = React.useState("EdTech");
+const [skillsStr, setSkillsStr] = React.useState("user research, analytics, A/B testing");
+const [interestsStr, setInterestsStr] = React.useState("learning platforms, personalization");
+const [remoteOnly, setRemoteOnly] = React.useState(true);
+const [noCoding, setNoCoding] = React.useState(false);
+const [partTimeOk, setPartTimeOk] = React.useState(false);
+const [timeHorizon, setTimeHorizon] = React.useState("30 days");
+const [mood, setMood] = React.useState(5);
+const [ideas, setIdeas] = React.useState<Idea[] | null>(null);
+const [loading, setLoading] = React.useState(false);
+const [error, setError] = React.useState<string | null>(null);
+const [copiedIdx, setCopiedIdx] = React.useState<number | null>(null);
+const prevTitlesRef = React.useRef<string[]>([]);
+
+
+
+
 
   // Only call API when user clicks "Inspire me"
   const abortRef = React.useRef<AbortController | null>(null);
@@ -141,12 +152,29 @@ export default function Page() {
     setError(null);
 
     try {
-      const resp = await fetch("/api/ideas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ background, interests, mood }),
-        signal: controller.signal,
-      });
+     const skills = skillsStr.split(",").map(s => s.trim()).filter(Boolean);
+const interests = interestsStr.split(",").map(s => s.trim()).filter(Boolean);
+
+const resp = await fetch("/api/ideas", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    background,
+    mood,
+    targetRole,
+    industry,
+    skills,
+    interests,
+    constraints: {
+      remoteOnly,
+      noCoding,
+      partTimeOk,
+    },
+    timeHorizon,
+  }),
+  signal: controller.signal,
+});
+
 
       if (!resp.ok) {
         const text = await resp.text().catch(() => "");
@@ -292,72 +320,167 @@ export default function Page() {
           {/* RIGHT: Inputs Card */}
           <aside>
             <div className="rounded-2xl p-6 shadow-md" style={{ backgroundColor: COLORS.boxBackground, border: `2px solid ${COLORS.outline}` }}>
-              <label className="block">
-                <span className="font-medium" style={{ color: COLORS.h1 }}>Your background (one-liner is fine)</span>
-                <textarea
-                  value={background}
-                  onChange={(e) => setBackground(e.target.value)}
-                  className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
-                  style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
-                  rows={3}
-                />
-              </label>
+  {/* Background */}
+  <label className="block">
+    <span className="font-medium" style={{ color: COLORS.h1 }}>Your background (one-liner is fine)</span>
+    <textarea
+      value={background}
+      onChange={(e) => setBackground(e.target.value)}
+      className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
+      style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
+      rows={3}
+    />
+  </label>
 
-              <label className="mt-6 block">
-                <span className="font-medium" style={{ color: COLORS.h1 }}>Interests (comma-separated)</span>
-                <input
-                  value={interests}
-                  onChange={(e) => setInterests(e.target.value)}
-                  className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
-                  style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
-                />
-              </label>
+  {/* NEW: structured inputs */}
+  <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+    {/* Target Role */}
+    <label className="block">
+      <span className="font-medium" style={{ color: COLORS.h1 }}>🎯 Target role</span>
+      <select
+        value={targetRole}
+        onChange={(e) => setTargetRole(e.target.value)}
+        className="mt-2 w-full rounded-2xl p-3 focus:outline-none focus:ring-2 shadow-sm"
+        style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
+      >
+        <option>Product Manager</option>
+        <option>Growth PM</option>
+        <option>UX Designer</option>
+        <option>Data Analyst</option>
+        <option>Customer Success Manager</option>
+        <option>Software Engineer</option>
+        <option>Content Strategist</option>
+      </select>
+    </label>
 
-              {/* ---- Mood Slider (no auto-fetch) ---- */}
-              <div className="w-full rounded-2xl mt-6">
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-base font-semibold leading-none">Mood Slider</h3>
-                  <div className="text-sm md:text-base">{moodLabel(mood)}</div>
-                </div>
+    {/* Industry */}
+    <label className="block">
+      <span className="font-medium" style={{ color: COLORS.h1 }}>💼 Industry</span>
+      <select
+        value={industry}
+        onChange={(e) => setIndustry(e.target.value)}
+        className="mt-2 w-full rounded-2xl p-3 focus:outline-none focus:ring-2 shadow-sm"
+        style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
+      >
+        <option>EdTech</option>
+        <option>Healthcare</option>
+        <option>Fintech</option>
+        <option>Climate Tech</option>
+        <option>AI Tools</option>
+        <option>E-commerce</option>
+        <option>Media</option>
+      </select>
+    </label>
 
-                <input
-                  type="range"
-                  min={0}
-                  max={10}
-                  step={1}
-                  value={mood}
-                  onChange={(e) => setMood(parseInt(e.target.value, 10))}
-                  className="w-full"
-                  aria-label="Mood slider from 0 to 10"
-                />
+    {/* Skills (tags via comma-separated) */}
+    <label className="block md:col-span-2">
+      <span className="font-medium" style={{ color: COLORS.h1 }}>🧠 Skills / strengths (comma-separated)</span>
+      <input
+        value={skillsStr}
+        onChange={(e) => setSkillsStr(e.target.value)}
+        placeholder="user research, analytics, A/B testing"
+        className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
+        style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
+      />
+      <div className="mt-2 flex flex-wrap gap-2">
+        {skillsStr.split(",").map(s => s.trim()).filter(Boolean).map((s, i) => (
+          <span key={i} className="rounded-full px-2 py-0.5 text-xs" style={{ backgroundColor: "#d9ecff", border: `1px solid ${COLORS.outline}`, color: COLORS.text }}>
+            {s}
+          </span>
+        ))}
+      </div>
+    </label>
 
-                <div className="pt-[3px] flex w-full justify-between text-xl select-none">
-                  <span aria-hidden="true">😑</span>
-                  <span aria-hidden="true">😁</span>
-                  <span aria-hidden="true">🤪</span>
-                </div>
+    {/* Interests (tags via comma-separated) */}
+    <label className="block md:col-span-2">
+      <span className="font-medium" style={{ color: COLORS.h1 }}>⚡ Interests / hobbies (comma-separated)</span>
+      <input
+        value={interestsStr}
+        onChange={(e) => setInterestsStr(e.target.value)}
+        placeholder="learning platforms, personalization"
+        className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
+        style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
+      />
+      <div className="mt-2 flex flex-wrap gap-2">
+        {interestsStr.split(",").map(s => s.trim()).filter(Boolean).map((s, i) => (
+          <span key={i} className="rounded-full px-2 py-0.5 text-xs" style={{ backgroundColor: "#ffe8f7", border: `1px solid ${COLORS.outline}`, color: COLORS.text }}>
+            {s}
+          </span>
+        ))}
+      </div>
+    </label>
 
-                <div className="mt-3 h-[48px] overflow-hidden">
-                  <p className="text-sm md:text-base leading-snug">
-                    {moodTagline(mood)}
-                  </p>
-                </div>
-              </div>
+    {/* Constraints */}
+    <fieldset className="md:col-span-2">
+      <span className="font-medium" style={{ color: COLORS.h1 }}>🧱 Constraints</span>
+      <div className="mt-2 flex flex-wrap gap-4 text-sm">
+        <label className="inline-flex items-center gap-2">
+          <input type="checkbox" checked={remoteOnly} onChange={(e) => setRemoteOnly(e.target.checked)} />
+          <span>Remote only</span>
+        </label>
+        <label className="inline-flex items-center gap-2">
+          <input type="checkbox" checked={noCoding} onChange={(e) => setNoCoding(e.target.checked)} />
+          <span>No coding</span>
+        </label>
+        <label className="inline-flex items-center gap-2">
+          <input type="checkbox" checked={partTimeOk} onChange={(e) => setPartTimeOk(e.target.checked)} />
+          <span>Part-time OK</span>
+        </label>
+      </div>
+    </fieldset>
 
-              {/* CTA */}
-              <div className="mt-6">
-                <button
-                  onClick={generate}
-                  disabled={loading}
-                  className="inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-white shadow-md hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 transition"
-                  style={{ backgroundColor: COLORS.button }}
-                  aria-busy={loading}
-                >
-                  {loading ? (<><Spinner className="h-4 w-4" />Generating…</>) : ("Inspire me")}
-                </button>
-                {error && <span className="ml-3 text-sm" style={{ color: COLORS.unconventional }}>Error: {error}</span>}
-              </div>
-            </div>
+    {/* Time horizon */}
+    <label className="block md:col-span-2">
+      <span className="font-medium" style={{ color: COLORS.h1 }}>🕓 Time horizon</span>
+      <select
+        value={timeHorizon}
+        onChange={(e) => setTimeHorizon(e.target.value)}
+        className="mt-2 w-full rounded-2xl p-3 focus:outline-none focus:ring-2 shadow-sm"
+        style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
+      >
+        <option>2 weeks</option>
+        <option>30 days</option>
+        <option>90 days</option>
+        <option>6 months</option>
+      </select>
+    </label>
+  </div>
+
+  {/* Mood Slider (unchanged behavior) */}
+  <div className="w-full rounded-2xl mt-6">
+    <div className="mb-3 flex items-center justify-between">
+      <h3 className="text-base font-semibold leading-none">Mood Slider</h3>
+      <div className="text-sm md:text-base">{moodLabel(mood)}</div>
+    </div>
+    <input
+      type="range" min={0} max={10} step={1} value={mood}
+      onChange={(e) => setMood(parseInt(e.target.value, 10))}
+      className="w-full"
+      aria-label="Mood slider from 0 to 10"
+    />
+    <div className="pt-[3px] flex w-full justify-between text-xl select-none">
+      <span aria-hidden="true">😑</span><span aria-hidden="true">😁</span><span aria-hidden="true">🤪</span>
+    </div>
+    <div className="mt-3 h-[48px] overflow-hidden">
+      <p className="text-sm md:text-base leading-snug">{moodTagline(mood)}</p>
+    </div>
+  </div>
+
+  {/* CTA */}
+  <div className="mt-6">
+    <button
+      onClick={generate}
+      disabled={loading}
+      className="inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-white shadow-md hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 transition"
+      style={{ backgroundColor: COLORS.button }}
+      aria-busy={loading}
+    >
+      {loading ? (<><Spinner className="h-4 w-4" />Generating…</>) : ("Inspire me")}
+    </button>
+    {error && <span className="ml-3 text-sm" style={{ color: COLORS.unconventional }}>Error: {error}</span>}
+  </div>
+</div>
+
           </aside>
         </div>
 
