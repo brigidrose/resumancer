@@ -63,14 +63,13 @@ async function callOpenAI(payload: any, retries = 2, delayMs = 600) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const {
-      mood = 5,
-      background = "",
-      targetRole = "",
-      industry = "",
-      skills = [] as string[],
-      interests = [] as string[],
-      constraints = { remoteOnly: false, noCoding: false, partTimeOk: false },
+   const {
+  mood = 5,
+  targetRole = "",
+  industry = "",
+  skills = [] as string[],
+  interests = [] as string[],
+  constraints = { remoteOnly: false, noCoding: false, partTimeOk: false },
       timeHorizon = "30 days",
     } = body;
 
@@ -87,7 +86,6 @@ export async function POST(req: NextRequest) {
 You are generating ideas for a JOB SEEKER, not a team already in-role.
 
 Context:
-- Background: ${background || "(not provided)"}
 - Target role: ${targetRole || "(not provided)"}
 - Industry: ${industry || "(not provided)"}
 - Skills/strengths: ${skills.length ? skills.join(", ") : "(none)"}

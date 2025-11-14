@@ -120,9 +120,6 @@ function auraColor(m: number) { if (m <= 3) return COLORS.unconventional; if (m 
 export default function Page() {
  // NEW structured inputs
   const [logoOk, setLogoOk] = React.useState(true);
-const [background, setBackground] = React.useState("Full-stack engineer turned product strategist; shipped 3 SaaS tools; loves rapid prototyping.");
-const [targetRole, setTargetRole] = React.useState("Product Manager");
-const [industry, setIndustry] = React.useState("EdTech");
 const [skillsStr, setSkillsStr] = React.useState("user research, analytics, A/B testing");
 const [interestsStr, setInterestsStr] = React.useState("learning platforms, personalization");
 const [remoteOnly, setRemoteOnly] = React.useState(true);
@@ -135,6 +132,56 @@ const [loading, setLoading] = React.useState(false);
 const [error, setError] = React.useState<string | null>(null);
 const [copiedIdx, setCopiedIdx] = React.useState<number | null>(null);
 const prevTitlesRef = React.useRef<string[]>([]);
+const [constraintsStr, setConstraintsStr] = React.useState("");
+
+//Role Suggestions
+const ALL_ROLES = [
+  // Product
+  "Product Manager", "Product Owner", "Growth Product Manager", "Technical Product Manager",
+  // Engineering
+  "Software Engineer", "Frontend Engineer", "Backend Engineer", "Full-Stack Engineer",
+  "Data Engineer", "Machine Learning Engineer", "DevOps Engineer", "QA Engineer",
+  // Design & Content
+  "UX Designer", "UI Designer", "Product Designer", "Content Strategist", "Copywriter",
+  "Technical Writer", "Video Editor",
+  // Operations & Admin
+  "Operations Manager", "Project Manager", "Program Manager", "Office Administrator",
+  "Executive Assistant", "HR Coordinator",
+  // Marketing & Sales
+  "Marketing Manager", "Growth Marketer", "Content Marketer", "SEO Specialist",
+  "Sales Operations Manager", "Customer Success Manager",
+  // Education / Misc
+  "Instructional Designer", "Research Analyst", "Community Manager"
+];
+
+const [targetRole, setTargetRole] = React.useState("");
+const [showSuggestions, setShowSuggestions] = React.useState(false);
+
+const filteredRoles = React.useMemo(() => {
+  const q = targetRole.toLowerCase();
+  if (!q) return ALL_ROLES.slice(0, 8); // short starter list
+  return ALL_ROLES.filter((r) => r.toLowerCase().includes(q)).slice(0, 10);
+}, [targetRole]);
+
+
+//Industry Suggestions
+const ALL_INDUSTRIES = [
+  "EdTech", "Healthcare", "Fintech", "Climate Tech", "AI Tools",
+  "E-commerce", "Media", "Gaming", "Travel", "Real Estate",
+  "Retail", "Logistics", "Manufacturing", "Energy", "Clean Tech",
+  "Nonprofit", "Government", "Legal Tech", "Entertainment",
+  "Sports", "Food & Beverage", "Hospitality", "Cybersecurity",
+  "MarTech", "HR Tech", "PropTech", "InsurTech"
+];
+
+const [industry, setIndustry] = React.useState("");
+const [showIndustrySuggestions, setShowIndustrySuggestions] = React.useState(false);
+
+const filteredIndustries = React.useMemo(() => {
+  const q = industry.toLowerCase();
+  if (!q) return ALL_INDUSTRIES.slice(0, 8);
+  return ALL_INDUSTRIES.filter((x) => x.toLowerCase().includes(q)).slice(0, 10);
+}, [industry]);
 
 
 
@@ -159,7 +206,6 @@ const resp = await fetch("/api/ideas", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    background,
     mood,
     targetRole,
     industry,
@@ -304,7 +350,7 @@ const resp = await fetch("/api/ideas", {
             <div className="mt-6">
               <h3 className="font-semibold" style={{ color: COLORS.h1 }}>How it works:</h3>
               <ul className="mt-3 list-disc pl-6 space-y-1">
-                <li>Tell me your background and interests.</li>
+                <li>Tell me your target role, industry, skills, interests.</li>
                 <li>Adjust the slider to choose how realistic or outlandish you want the ideas.</li>
                 <li>Hit <em>Inspire me</em> and <span className="underline">watch the magic happen</span>.</li>
                 <li>
@@ -320,61 +366,95 @@ const resp = await fetch("/api/ideas", {
           {/* RIGHT: Inputs Card */}
           <aside>
             <div className="rounded-2xl p-6 shadow-md" style={{ backgroundColor: COLORS.boxBackground, border: `2px solid ${COLORS.outline}` }}>
-  {/* Background */}
-  <label className="block">
-    <span className="font-medium" style={{ color: COLORS.h1 }}>Your background (one-liner is fine)</span>
-    <textarea
-      value={background}
-      onChange={(e) => setBackground(e.target.value)}
-      className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
-      style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
-      rows={3}
-    />
-  </label>
+
 
   {/* NEW: structured inputs */}
-  <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-    {/* Target Role */}
-    <label className="block">
-      <span className="font-medium" style={{ color: COLORS.h1 }}>🎯 Target role</span>
-      <select
-        value={targetRole}
-        onChange={(e) => setTargetRole(e.target.value)}
-        className="mt-2 w-full rounded-2xl p-3 focus:outline-none focus:ring-2 shadow-sm"
-        style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
-      >
-        <option>Product Manager</option>
-        <option>Growth PM</option>
-        <option>UX Designer</option>
-        <option>Data Analyst</option>
-        <option>Customer Success Manager</option>
-        <option>Software Engineer</option>
-        <option>Content Strategist</option>
-      </select>
-    </label>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-0">
 
-    {/* Industry */}
-    <label className="block">
-      <span className="font-medium" style={{ color: COLORS.h1 }}>💼 Industry</span>
-      <select
-        value={industry}
-        onChange={(e) => setIndustry(e.target.value)}
-        className="mt-2 w-full rounded-2xl p-3 focus:outline-none focus:ring-2 shadow-sm"
-        style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
-      >
-        <option>EdTech</option>
-        <option>Healthcare</option>
-        <option>Fintech</option>
-        <option>Climate Tech</option>
-        <option>AI Tools</option>
-        <option>E-commerce</option>
-        <option>Media</option>
-      </select>
-    </label>
+    {/* Target role with typeahead */}
+<label className="block md:col-span-2 relative">
+  <span className="font-medium" style={{ color: COLORS.h1 }}>🎯 Target role</span>
+  <input
+    value={targetRole}
+    onChange={(e) => {
+      setTargetRole(e.target.value);
+      setShowSuggestions(true);
+    }}
+    onFocus={() => setShowSuggestions(true)}
+    onBlur={() => setTimeout(() => setShowSuggestions(false), 150)} // small delay so clicks register
+    placeholder="Start typing (e.g., Product Manager, Software Engineer, Content Strategist)"
+    className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
+    style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
+  />
+
+  {showSuggestions && filteredRoles.length > 0 && (
+    <ul
+      className="absolute z-10 mt-1 w-full rounded-2xl border shadow-sm max-h-48 overflow-y-auto text-sm"
+      style={{ backgroundColor: COLORS.cardBg, borderColor: COLORS.outline }}
+    >
+      {filteredRoles.map((role) => (
+        <li
+          key={role}
+          onMouseDown={() => {
+            setTargetRole(role);
+            setShowSuggestions(false);
+          }}
+          className="px-3 py-2 hover:bg-black/5 cursor-pointer"
+        >
+          {role}
+        </li>
+      ))}
+    </ul>
+  )}
+</label>
+
+
+ {/* Industry combobox */}
+<label className="block md:col-span-2 relative w-full">
+  <span className="font-medium" style={{ color: COLORS.h1 }}>💼 Industry</span>
+  <input
+    value={industry}
+    onChange={(e) => {
+      setIndustry(e.target.value);
+      setShowIndustrySuggestions(true);
+    }}
+    onFocus={() => setShowIndustrySuggestions(true)}
+    onBlur={() => setTimeout(() => setShowIndustrySuggestions(false), 150)}
+    placeholder="Start typing (e.g., Media, Fintech, Healthcare)"
+    className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
+    style={{
+      backgroundColor: COLORS.cardBg,
+      color: COLORS.text,
+      border: `1px solid ${COLORS.outline}`,
+    }}
+  />
+
+  {showIndustrySuggestions && filteredIndustries.length > 0 && (
+    <ul
+      className="absolute z-10 mt-1 w-full rounded-2xl border shadow-sm max-h-48 overflow-y-auto text-sm"
+      style={{ backgroundColor: COLORS.cardBg, borderColor: COLORS.outline }}
+    >
+      {filteredIndustries.map((opt) => (
+        <li
+          key={opt}
+          onMouseDown={() => {
+            setIndustry(opt);
+            setShowIndustrySuggestions(false);
+          }}
+          className="px-3 py-2 hover:bg-black/5 cursor-pointer"
+        >
+          {opt}
+        </li>
+      ))}
+    </ul>
+  )}
+</label>
+
+
 
     {/* Skills (tags via comma-separated) */}
     <label className="block md:col-span-2">
-      <span className="font-medium" style={{ color: COLORS.h1 }}>🧠 Skills / strengths (comma-separated)</span>
+      <span className="font-medium" style={{ color: COLORS.h1 }}>🧠 Skills & Strengths</span>
       <input
         value={skillsStr}
         onChange={(e) => setSkillsStr(e.target.value)}
@@ -382,18 +462,11 @@ const resp = await fetch("/api/ideas", {
         className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
         style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
       />
-      <div className="mt-2 flex flex-wrap gap-2">
-        {skillsStr.split(",").map(s => s.trim()).filter(Boolean).map((s, i) => (
-          <span key={i} className="rounded-full px-2 py-0.5 text-xs" style={{ backgroundColor: "#d9ecff", border: `1px solid ${COLORS.outline}`, color: COLORS.text }}>
-            {s}
-          </span>
-        ))}
-      </div>
     </label>
 
     {/* Interests (tags via comma-separated) */}
     <label className="block md:col-span-2">
-      <span className="font-medium" style={{ color: COLORS.h1 }}>⚡ Interests / hobbies (comma-separated)</span>
+      <span className="font-medium" style={{ color: COLORS.h1 }}>⚡ Interests & Hobbies</span>
       <input
         value={interestsStr}
         onChange={(e) => setInterestsStr(e.target.value)}
@@ -401,47 +474,41 @@ const resp = await fetch("/api/ideas", {
         className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
         style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
       />
-      <div className="mt-2 flex flex-wrap gap-2">
-        {interestsStr.split(",").map(s => s.trim()).filter(Boolean).map((s, i) => (
-          <span key={i} className="rounded-full px-2 py-0.5 text-xs" style={{ backgroundColor: "#ffe8f7", border: `1px solid ${COLORS.outline}`, color: COLORS.text }}>
-            {s}
-          </span>
-        ))}
-      </div>
     </label>
 
     {/* Constraints */}
-    <fieldset className="md:col-span-2">
-      <span className="font-medium" style={{ color: COLORS.h1 }}>🧱 Constraints</span>
-      <div className="mt-2 flex flex-wrap gap-4 text-sm">
-        <label className="inline-flex items-center gap-2">
-          <input type="checkbox" checked={remoteOnly} onChange={(e) => setRemoteOnly(e.target.checked)} />
-          <span>Remote only</span>
-        </label>
-        <label className="inline-flex items-center gap-2">
-          <input type="checkbox" checked={noCoding} onChange={(e) => setNoCoding(e.target.checked)} />
-          <span>No coding</span>
-        </label>
-        <label className="inline-flex items-center gap-2">
-          <input type="checkbox" checked={partTimeOk} onChange={(e) => setPartTimeOk(e.target.checked)} />
-          <span>Part-time OK</span>
-        </label>
-      </div>
-    </fieldset>
+<fieldset className="md:col-span-2">
+  <span className="font-medium" style={{ color: COLORS.h1 }}>🧱 Constraints</span>
+  {/* Remove flex so input can fill full width */}
+  <div className="mt-2">
+    <input
+      value={constraintsStr}
+      onChange={(e) => setConstraintsStr(e.target.value)}
+      placeholder="e.g., no relocation, low budget, async work, no cold calls"
+      className="w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
+      style={{
+        backgroundColor: COLORS.cardBg,
+        color: COLORS.text,
+        border: `1px solid ${COLORS.outline}`,
+      }}
+    />
+  </div>
+</fieldset>
 
-    {/* Time horizon */}
+
+    {/* Timeline */}
     <label className="block md:col-span-2">
-      <span className="font-medium" style={{ color: COLORS.h1 }}>🕓 Time horizon</span>
+      <span className="font-medium" style={{ color: COLORS.h1 }}>🕓 Timeline</span>
       <select
         value={timeHorizon}
         onChange={(e) => setTimeHorizon(e.target.value)}
         className="mt-2 w-full rounded-2xl p-3 focus:outline-none focus:ring-2 shadow-sm"
         style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
       >
-        <option>2 weeks</option>
         <option>30 days</option>
         <option>90 days</option>
         <option>6 months</option>
+        <option>neverending</option>
       </select>
     </label>
   </div>
