@@ -7,6 +7,7 @@ type Idea = {
   why: string;
   plan: string;
   opener: string;
+  suggested_timeframe?: string;
 };
 
 function moodProfile(mood: number) {
@@ -112,6 +113,8 @@ Return JSON with exactly 3 objects, in this order:
 Definitions:
 - "plan": 5–8 short lines outlining the artifact to build, tools to use, scope of work, distribution strategy (where it will be shared), and a measurable outcome (e.g., 50 survey completes, 1k views, 2 recruiter replies, 1 demo booked).
 - "opener": a punchy LinkedIn opener to share the artifact and invite feedback.
+- "suggested_timeframe": a realistic duration for completing the idea (e.g., "2 weeks", "30 days", "3–6 months") based on the scope of work you propose.
+
 `;
 
     // ... keep your existing payload with response_format: json_schema ...

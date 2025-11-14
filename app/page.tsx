@@ -25,6 +25,7 @@ type Idea = {
   why: string;
   plan: string;
   opener: string;
+  suggested_timeframe?: string;
 };
 
 /* ---------- Inline UI bits ---------- */
