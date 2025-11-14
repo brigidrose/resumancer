@@ -122,17 +122,14 @@ export default function Page() {
   const [logoOk, setLogoOk] = React.useState(true);
 const [skillsStr, setSkillsStr] = React.useState("user research, analytics, A/B testing");
 const [interestsStr, setInterestsStr] = React.useState("learning platforms, personalization");
-const [remoteOnly, setRemoteOnly] = React.useState(true);
-const [noCoding, setNoCoding] = React.useState(false);
-const [partTimeOk, setPartTimeOk] = React.useState(false);
-const [timeHorizon, setTimeHorizon] = React.useState("30 days");
 const [mood, setMood] = React.useState(5);
 const [ideas, setIdeas] = React.useState<Idea[] | null>(null);
 const [loading, setLoading] = React.useState(false);
 const [error, setError] = React.useState<string | null>(null);
 const [copiedIdx, setCopiedIdx] = React.useState<number | null>(null);
 const prevTitlesRef = React.useRef<string[]>([]);
-const [constraintsStr, setConstraintsStr] = React.useState("");
+const [additionalContext, setadditionalContext] = React.useState("");
+
 
 //Role Suggestions
 const ALL_ROLES = [
@@ -211,12 +208,7 @@ const resp = await fetch("/api/ideas", {
     industry,
     skills,
     interests,
-    constraints: {
-      remoteOnly,
-      noCoding,
-      partTimeOk,
-    },
-    timeHorizon,
+    additionalContext,
   }),
   signal: controller.signal,
 });
@@ -363,193 +355,150 @@ const resp = await fetch("/api/ideas", {
          
           </section>
 
-          {/* RIGHT: Inputs Card */}
-          <aside>
-            <div className="rounded-2xl p-6 shadow-md" style={{ backgroundColor: COLORS.boxBackground, border: `2px solid ${COLORS.outline}` }}>
+{/* RIGHT: Inputs Card */}
+<aside>
+  <div
+    className="rounded-2xl p-6 shadow-md"
+    style={{ backgroundColor: COLORS.boxBackground, border: `2px solid ${COLORS.outline}` }}
+  >
+    {/* NEW: structured inputs */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-0">
 
-
-  {/* NEW: structured inputs */}
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-0">
-
-    {/* Target role with typeahead */}
-<label className="block md:col-span-2 relative">
-  <span className="font-medium" style={{ color: COLORS.h1 }}>🎯 Target role</span>
-  <input
-    value={targetRole}
-    onChange={(e) => {
-      setTargetRole(e.target.value);
-      setShowSuggestions(true);
-    }}
-    onFocus={() => setShowSuggestions(true)}
-    onBlur={() => setTimeout(() => setShowSuggestions(false), 150)} // small delay so clicks register
-    placeholder="Start typing (e.g., Product Manager, Software Engineer, Content Strategist)"
-    className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
-    style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
-  />
-
-  {showSuggestions && filteredRoles.length > 0 && (
-    <ul
-      className="absolute z-10 mt-1 w-full rounded-2xl border shadow-sm max-h-48 overflow-y-auto text-sm"
-      style={{ backgroundColor: COLORS.cardBg, borderColor: COLORS.outline }}
-    >
-      {filteredRoles.map((role) => (
-        <li
-          key={role}
-          onMouseDown={() => {
-            setTargetRole(role);
-            setShowSuggestions(false);
+      {/* Target role with typeahead */}
+      <label className="block md:col-span-2 relative">
+        <span className="font-medium" style={{ color: COLORS.h1 }}>🎯 Target role</span>
+        <input
+          value={targetRole}
+          onChange={(e) => {
+            setTargetRole(e.target.value);
+            setShowSuggestions(true);
           }}
-          className="px-3 py-2 hover:bg-black/5 cursor-pointer"
-        >
-          {role}
-        </li>
-      ))}
-    </ul>
-  )}
-</label>
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+          placeholder="Start typing (e.g., Product Manager, Software Engineer, Content Strategist)"
+          className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
+          style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
+        />
 
+        {showSuggestions && filteredRoles.length > 0 && (
+          <ul
+            className="absolute z-10 mt-1 w-full rounded-2xl border shadow-sm max-h-48 overflow-y-auto text-sm"
+            style={{ backgroundColor: COLORS.cardBg, borderColor: COLORS.outline }}
+          >
+            {filteredRoles.map((role) => (
+              <li
+                key={role}
+                onMouseDown={() => { setTargetRole(role); setShowSuggestions(false); }}
+                className="px-3 py-2 hover:bg-black/5 cursor-pointer"
+              >
+                {role}
+              </li>
+            ))}
+          </ul>
+        )}
+      </label>
 
- {/* Industry combobox */}
-<label className="block md:col-span-2 relative w-full">
-  <span className="font-medium" style={{ color: COLORS.h1 }}>💼 Industry</span>
-  <input
-    value={industry}
-    onChange={(e) => {
-      setIndustry(e.target.value);
-      setShowIndustrySuggestions(true);
-    }}
-    onFocus={() => setShowIndustrySuggestions(true)}
-    onBlur={() => setTimeout(() => setShowIndustrySuggestions(false), 150)}
-    placeholder="Start typing (e.g., Media, Fintech, Healthcare)"
-    className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
-    style={{
-      backgroundColor: COLORS.cardBg,
-      color: COLORS.text,
-      border: `1px solid ${COLORS.outline}`,
-    }}
-  />
-
-  {showIndustrySuggestions && filteredIndustries.length > 0 && (
-    <ul
-      className="absolute z-10 mt-1 w-full rounded-2xl border shadow-sm max-h-48 overflow-y-auto text-sm"
-      style={{ backgroundColor: COLORS.cardBg, borderColor: COLORS.outline }}
-    >
-      {filteredIndustries.map((opt) => (
-        <li
-          key={opt}
-          onMouseDown={() => {
-            setIndustry(opt);
-            setShowIndustrySuggestions(false);
+      {/* Industry combobox */}
+      <label className="block md:col-span-2 relative w-full">
+        <span className="font-medium" style={{ color: COLORS.h1 }}>💼 Industry</span>
+        <input
+          value={industry}
+          onChange={(e) => {
+            setIndustry(e.target.value);
+            setShowIndustrySuggestions(true);
           }}
-          className="px-3 py-2 hover:bg-black/5 cursor-pointer"
-        >
-          {opt}
-        </li>
-      ))}
-    </ul>
-  )}
-</label>
+          onFocus={() => setShowIndustrySuggestions(true)}
+          onBlur={() => setTimeout(() => setShowIndustrySuggestions(false), 150)}
+          placeholder="Start typing (e.g., Media, Fintech, Healthcare)"
+          className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
+          style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
+        />
 
+        {showIndustrySuggestions && filteredIndustries.length > 0 && (
+          <ul
+            className="absolute z-10 mt-1 w-full rounded-2xl border shadow-sm max-h-48 overflow-y-auto text-sm"
+            style={{ backgroundColor: COLORS.cardBg, borderColor: COLORS.outline }}
+          >
+            {filteredIndustries.map((opt) => (
+              <li
+                key={opt}
+                onMouseDown={() => { setIndustry(opt); setShowIndustrySuggestions(false); }}
+                className="px-3 py-2 hover:bg-black/5 cursor-pointer"
+              >
+                {opt}
+              </li>
+            ))}
+          </ul>
+        )}
+      </label>
 
+      {/* Skills */}
+      <label className="block md:col-span-2">
+        <span className="font-medium" style={{ color: COLORS.h1 }}>🧠 Skills / strengths (comma-separated)</span>
+        <input
+          value={skillsStr}
+          onChange={(e) => setSkillsStr(e.target.value)}
+          placeholder="user research, analytics, A/B testing"
+          className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
+          style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
+        />
+      </label>
 
-    {/* Skills (tags via comma-separated) */}
-    <label className="block md:col-span-2">
-      <span className="font-medium" style={{ color: COLORS.h1 }}>🧠 Skills & Strengths</span>
-      <input
-        value={skillsStr}
-        onChange={(e) => setSkillsStr(e.target.value)}
-        placeholder="user research, analytics, A/B testing"
-        className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
-        style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
-      />
-    </label>
+      {/* Interests */}
+      <label className="block md:col-span-2">
+        <span className="font-medium" style={{ color: COLORS.h1 }}>⚡ Interests / hobbies (comma-separated)</span>
+        <input
+          value={interestsStr}
+          onChange={(e) => setInterestsStr(e.target.value)}
+          placeholder="learning platforms, personalization"
+          className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
+          style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
+        />
+      </label>
 
-    {/* Interests (tags via comma-separated) */}
-    <label className="block md:col-span-2">
-      <span className="font-medium" style={{ color: COLORS.h1 }}>⚡ Interests & Hobbies</span>
-      <input
-        value={interestsStr}
-        onChange={(e) => setInterestsStr(e.target.value)}
-        placeholder="learning platforms, personalization"
-        className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
-        style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
-      />
-    </label>
+      {/* Additional context */}
+      <label className="block md:col-span-2">
+        <span className="font-medium" style={{ color: COLORS.h1 }}>🧱 Additional context</span>
+        <input
+          value={additionalContext}
+          onChange={(e) => setadditionalContext(e.target.value)}
+          placeholder="e.g., low budget, no code, 60-day timeframe, for networking event"
+          className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
+          style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
+        />
+      </label>
 
-    {/* Constraints */}
-<fieldset className="md:col-span-2">
-  <span className="font-medium" style={{ color: COLORS.h1 }}>🧱 Constraints</span>
-  {/* Remove flex so input can fill full width */}
-  <div className="mt-2">
-    <input
-      value={constraintsStr}
-      onChange={(e) => setConstraintsStr(e.target.value)}
-      placeholder="e.g., no relocation, low budget, async work, no cold calls"
-      className="w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
-      style={{
-        backgroundColor: COLORS.cardBg,
-        color: COLORS.text,
-        border: `1px solid ${COLORS.outline}`,
-      }}
-    />
-  </div>
-</fieldset>
-
-
-    {/* Timeline */}
-    <label className="block md:col-span-2">
-      <span className="font-medium" style={{ color: COLORS.h1 }}>🕓 Timeline</span>
-      <select
-        value={timeHorizon}
-        onChange={(e) => setTimeHorizon(e.target.value)}
-        className="mt-2 w-full rounded-2xl p-3 focus:outline-none focus:ring-2 shadow-sm"
-        style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
-      >
-        <option>30 days</option>
-        <option>90 days</option>
-        <option>6 months</option>
-        <option>neverending</option>
-      </select>
-    </label>
-  </div>
-
-  {/* Mood Slider (unchanged behavior) */}
-  <div className="w-full rounded-2xl mt-6">
-    <div className="mb-3 flex items-center justify-between">
-      <h3 className="text-base font-semibold leading-none">Mood Slider</h3>
-      <div className="text-sm md:text-base">{moodLabel(mood)}</div>
-    </div>
-    <input
-      type="range" min={0} max={10} step={1} value={mood}
-      onChange={(e) => setMood(parseInt(e.target.value, 10))}
-      className="w-full"
-      aria-label="Mood slider from 0 to 10"
-    />
-    <div className="pt-[3px] flex w-full justify-between text-xl select-none">
-      <span aria-hidden="true">😑</span><span aria-hidden="true">😁</span><span aria-hidden="true">🤪</span>
-    </div>
-    <div className="mt-3 h-[48px] overflow-hidden">
-      <p className="text-sm md:text-base leading-snug">{moodTagline(mood)}</p>
-    </div>
-  </div>
-
-  {/* CTA */}
-  <div className="mt-6">
-    <button
-      onClick={generate}
-      disabled={loading}
-      className="inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-white shadow-md hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 transition"
-      style={{ backgroundColor: COLORS.button }}
-      aria-busy={loading}
-    >
-      {loading ? (<><Spinner className="h-4 w-4" />Generating…</>) : ("Inspire me")}
-    </button>
-    {error && <span className="ml-3 text-sm" style={{ color: COLORS.unconventional }}>Error: {error}</span>}
-  </div>
-</div>
-
-          </aside>
+      {/* Mood slider */}
+      <label className="block md:col-span-2">
+        <div className="flex items-center justify-between">
+          <span className="font-medium" style={{ color: COLORS.h1 }}>🧯 Mood slider</span>
+          <span className="text-sm opacity-80">{moodLabel(mood)} — {moodTagline(mood)}</span>
         </div>
+        <input
+          type="range" min={0} max={10} step={1} value={mood}
+          onChange={(e) => setMood(parseInt(e.target.value))}
+          className="mt-2 w-full"
+        />
+      </label>
+
+      {/* CTA */}
+      <div className="md:col-span-2 mt-2">
+        <button
+          onClick={generate}
+          disabled={loading}
+          className="rounded-xl px-4 py-3 font-semibold shadow hover:brightness-95 disabled:opacity-60"
+          style={{ backgroundColor: COLORS.button, color: "#fff" }}
+        >
+          {loading ? <div className="flex items-center gap-2"><Spinner className="h-5 w-5" /> Generating…</div> : "Inspire me"}
+        </button>
+        {error && <span className="ml-3 text-sm" style={{ color: "#b00020" }}>Error: {error}</span>}
+      </div>
+
+    </div>{/* end inner grid */}
+  </div>{/* end card */}
+</aside>
+</div>{/* end .grid grid-cols-1 ... lg:grid-cols-2 */}
+
 
         {/* Results */}
         {ideas && (
@@ -579,21 +528,24 @@ const resp = await fetch("/api/ideas", {
         {i + 1}) {it.title}
       </h3>
     </div>
-    ...
+    <p className="text-sm opacity-80">
+  Suggested timeframe: {it.suggested_timeframe || "—"}
+</p>
 
-                    <p className="text-sm"><span className="font-medium" style={{ color: COLORS.h1 }}>Why it fits:</span> {it.why}</p>
-                    <p className="mt-2 whitespace-pre-line text-sm"><span className="font-medium" style={{ color: COLORS.h1 }}>30-day plan:</span>{"\n"}{it.plan}</p>
-                    <p className="mt-2 text-sm"><span className="font-medium" style={{ color: COLORS.h1 }}>LinkedIn opener:</span> <span style={{ color: COLORS.unconventional }}>{it.opener}</span></p>
-                  </div>
-                  <div className="pt-2">
-                    <button
-                      onClick={() => shareIdea(it, i)}
-                      className="rounded-lg px-3 py-1.5 text-sm hover:bg-black/5 focus:outline-none focus:ring-2"
-                      style={{ border: `1px solid ${COLORS.outline}`, color: COLORS.text, outlineColor: COLORS.topLink }}
-                    >
-                      {copiedIdx === i ? "Copied!" : "Share"}
-                    </button>
-                  </div>
+
+    <p className="text-sm"><span className="font-medium" style={{ color: COLORS.h1 }}>Why it fits:</span> {it.why}</p>
+    <p className="mt-2 whitespace-pre-line text-sm"><span className="font-medium" style={{ color: COLORS.h1 }}>30-day plan:</span>{"\n"}{it.plan}</p>
+    <p className="mt-2 text-sm"><span className="font-medium" style={{ color: COLORS.h1 }}>LinkedIn opener:</span> <span style={{ color: COLORS.unconventional }}>{it.opener}</span></p>
+  </div>
+  <div className="pt-2">
+    <button
+      onClick={() => shareIdea(it, i)}
+      className="rounded-lg px-3 py-1.5 text-sm hover:bg-black/5 focus:outline-none focus:ring-2"
+      style={{ border: `1px solid ${COLORS.outline}`, color: COLORS.text, outlineColor: COLORS.topLink }}
+      >
+      {copiedIdx === i ? "Copied!" : "Share"}
+    </button>
+  </div>
                 </article>
               ))}
             </div>

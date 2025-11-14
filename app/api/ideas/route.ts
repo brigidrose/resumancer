@@ -69,17 +69,12 @@ export async function POST(req: NextRequest) {
   industry = "",
   skills = [] as string[],
   interests = [] as string[],
-  constraints = { remoteOnly: false, noCoding: false, partTimeOk: false },
-      timeHorizon = "30 days",
+  additionalContext = "",
     } = body;
 
     const { m, weights, temperature, scope, budget, risk } = moodProfile(mood);
 
-    const constraintText = [
-      constraints.remoteOnly ? "remote only" : null,
-      constraints.noCoding ? "no coding" : null,
-      constraints.partTimeOk ? "part-time OK" : null,
-    ].filter(Boolean).join(", ") || "none";
+  
 
     const system = "Return ONLY JSON that matches the schema.";
     const user = `
@@ -90,8 +85,7 @@ Context:
 - Industry: ${industry || "(not provided)"}
 - Skills/strengths: ${skills.length ? skills.join(", ") : "(none)"}
 - Interests/hobbies: ${interests.length ? interests.join(", ") : "(none)"}
-- Constraints: ${constraintText}
-- Time horizon: ${timeHorizon}
+- Additoinal Context: ${additionalContext || "(none provided)"}
 - Mood: ${m} (scope=${scope}; budget=${budget}; risk=${risk})
 - Weights: practical=${weights.practical.toFixed(2)}, creative=${weights.creative.toFixed(2)}, absurd=${weights.absurd.toFixed(2)}
 
@@ -100,6 +94,7 @@ Novelty seed (nondeterminism hint): ${body.noveltySeed ?? "none"}
 
 INSTRUCTIONS (tailored for transitioners / job seekers):
 - Output exactly 3 ideas: categories = practical, creative, absurd.
+- For each idea, include "suggested_timeframe" as a realistic duration (e.g., "2 weeks", "30–45 days", "3–6 months") based on the scope you propose.
 - Each idea must help the job seeker create PUBLIC PROOF (a portfolio artifact) that hiring managers can see within the time horizon.
 - Optimize for RESUME bullets, LINKEDIN posts, and a SHAREABLE LINK (GitHub, Notion, Figma, Loom, live demo).
 - Tie each idea directly to the target role + industry. Name concrete tools (Figma, Mixpanel, Amplitude, SQL, Python, Airtable, Bubble, Retool, Webflow, etc) and artifacts (case study, teardown, dashboard, prototype, experiment readout).
@@ -115,7 +110,7 @@ Return JSON with exactly 3 objects, in this order:
 ]
 
 Definitions:
-- "plan": 5–8 short lines: artifact to build, tools, scope for ${timeHorizon}, distribution (where to post), and a measurable outcome (e.g., 50 survey completes, 1k views, 2 recruiter replies, 1 demo booked).
+- "plan": 5–8 short lines outlining the artifact to build, tools to use, scope of work, distribution strategy (where it will be shared), and a measurable outcome (e.g., 50 survey completes, 1k views, 2 recruiter replies, 1 demo booked).
 - "opener": a punchy LinkedIn opener to share the artifact and invite feedback.
 `;
 
@@ -144,9 +139,10 @@ Definitions:
                     title: { type: "string" },
                     why: { type: "string" },
                     plan: { type: "string" },
-                    opener: { type: "string" }
+                    opener: { type: "string" },
+                    suggested_timeframe: { type: "string" },
                   },
-                  required: ["category","title","why","plan","opener"],
+                  required: ["category","title","why","plan","opener","suggested_timeframe"],
                   additionalProperties: false
                 }
               }
