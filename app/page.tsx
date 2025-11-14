@@ -121,8 +121,8 @@ function auraColor(m: number) { if (m <= 3) return COLORS.unconventional; if (m 
 export default function Page() {
  // NEW structured inputs
   const [logoOk, setLogoOk] = React.useState(true);
-const [skillsStr, setSkillsStr] = React.useState("user research, analytics, A/B testing");
-const [interestsStr, setInterestsStr] = React.useState("learning platforms, personalization");
+const [skillsStr, setSkillsStr] = React.useState("");
+const [interestsStr, setInterestsStr] = React.useState("");
 const [mood, setMood] = React.useState(5);
 const [ideas, setIdeas] = React.useState<Idea[] | null>(null);
 const [loading, setLoading] = React.useState(false);
@@ -329,6 +329,10 @@ const resp = await fetch("/api/ideas", {
 
             <div className="mt-6 space-y-4 max-w-2xl">
               <p>
+               <b> Hi! I am a work in progress! If you want to report a bug, please send your note to <a href="mailto:brigid.walsh@gmail.com?subject=I'd%20like%20to%20hire%20you!%20(and%20I%20found%20a%20bug)">brigidrose@gmail.com</a>, along with a request to interview. &#128578;
+                </b>
+              </p>
+              <p>
                 Feeling invisible on LinkedIn? Wondering if you've been tossing your resumes into a blackhole? 
                 Realizing your new job manifestations just haven't been delivering? Well my friend, you are not alone.
               </p>
@@ -376,7 +380,7 @@ const resp = await fetch("/api/ideas", {
           }}
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-          placeholder="Start typing (e.g., Product Manager, Software Engineer, Content Strategist)"
+          placeholder="Example: Product Manager, Software Engineer, Exorcist"
           className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
           style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
         />
@@ -410,7 +414,7 @@ const resp = await fetch("/api/ideas", {
           }}
           onFocus={() => setShowIndustrySuggestions(true)}
           onBlur={() => setTimeout(() => setShowIndustrySuggestions(false), 150)}
-          placeholder="Start typing (e.g., Media, Fintech, Healthcare)"
+          placeholder="Example: Media, Fintech, Ghost Hunting"
           className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
           style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
         />
@@ -435,11 +439,11 @@ const resp = await fetch("/api/ideas", {
 
       {/* Skills */}
       <label className="block md:col-span-2">
-        <span className="font-medium" style={{ color: COLORS.h1 }}>🧠 Skills / strengths (comma-separated)</span>
+        <span className="font-medium" style={{ color: COLORS.h1 }}>🧠 Skills & Strengths (comma-separated)</span>
         <input
           value={skillsStr}
           onChange={(e) => setSkillsStr(e.target.value)}
-          placeholder="user research, analytics, A/B testing"
+          placeholder="Example: UX/UI, analytics, reviving job searches from the dead"
           className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
           style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
         />
@@ -451,7 +455,7 @@ const resp = await fetch("/api/ideas", {
         <input
           value={interestsStr}
           onChange={(e) => setInterestsStr(e.target.value)}
-          placeholder="learning platforms, personalization"
+          placeholder="Example: wearables, neuroscience, underwater basket weaving"
           className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
           style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
         />
@@ -463,37 +467,71 @@ const resp = await fetch("/api/ideas", {
         <input
           value={additionalContext}
           onChange={(e) => setadditionalContext(e.target.value)}
-          placeholder="e.g., low budget, no code, 60-day timeframe, for networking event"
+          placeholder="Example: low budget, no code, will sell a kidney for a job"
           className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
           style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
         />
       </label>
 
-      {/* Mood slider */}
-      <label className="block md:col-span-2">
-        <div className="flex items-center justify-between">
-          <span className="font-medium" style={{ color: COLORS.h1 }}>🧯 Mood slider</span>
-          <span className="text-sm opacity-80">{moodLabel(mood)} — {moodTagline(mood)}</span>
-        </div>
-        <input
-          type="range" min={0} max={10} step={1} value={mood}
-          onChange={(e) => setMood(parseInt(e.target.value))}
-          className="mt-2 w-full"
-        />
-      </label>
-
-      {/* CTA */}
+           {/* Mood slider card */}
       <div className="md:col-span-2 mt-2">
-        <button
-          onClick={generate}
-          disabled={loading}
-          className="rounded-xl px-4 py-3 font-semibold shadow hover:brightness-95 disabled:opacity-60"
-          style={{ backgroundColor: COLORS.button, color: "#fff" }}
-        >
-          {loading ? <div className="flex items-center gap-2"><Spinner className="h-5 w-5" /> Generating…</div> : "Inspire me"}
-        </button>
-        {error && <span className="ml-3 text-sm" style={{ color: "#b00020" }}>Error: {error}</span>}
+        <div className="p-4">
+          <div className="flex items-center justify-between">
+            <span className="font-medium" style={{ color: COLORS.h1 }}>
+              Mood Slider
+            </span>
+            <span className="text-sm font-semibold" style={{ color: COLORS.text }}>
+              {moodLabel(mood)}
+            </span>
+          </div>
+
+          <input
+            type="range"
+            min={0}
+            max={10}
+            step={1}
+            value={mood}
+            onChange={(e) => setMood(parseInt(e.target.value))}
+            className="mt-3 w-full"
+          />
+
+          {/* Emoji row under the slider */}
+          <div className="mt-3 flex items-center justify-between text-2xl">
+            <span>😑</span>
+            <span>😁</span>
+            <span>🤪</span>
+          </div>
+
+          {/* Tagline text */}
+          <p className="mt-3 text-sm" style={{ color: COLORS.text }}>
+            {moodTagline(mood)}
+          </p>
+
+          {/* Inspire button inside the card */}
+          <div className="mt-4">
+            <button
+              onClick={generate}
+              disabled={loading}
+              className="rounded-xl px-4 py-3 font-semibold shadow hover:brightness-95 disabled:opacity-60"
+              style={{ backgroundColor: COLORS.button, color: "#fff" }}
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <Spinner className="h-5 w-5" /> Generating…
+                </div>
+              ) : (
+                "Inspire me"
+              )}
+            </button>
+            {error && (
+              <span className="ml-3 text-sm" style={{ color: "#b00020" }}>
+                Error: {error}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
+
 
     </div>{/* end inner grid */}
   </div>{/* end card */}
