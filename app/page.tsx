@@ -20,7 +20,7 @@ const COLORS = {
 
 /* ---------- Types ---------- */
 type Idea = {
-  category: "practical" | "creative" | "absurd";
+  category: "creative" | "practical" | "absurd";
   title: string;
   why: string;
   plan: string;
@@ -81,7 +81,7 @@ function badgeStyle(cat: Idea["category"]) {
 }
 
 function formatShareText(it: Idea) {
-  const siteURL = "https://resumancer.example.com"; // placeholder until live
+  const siteURL = "https://resumancer.app"; // placeholder until live
   const icons: Record<Idea["category"], string> = {
     practical: "🔧",
     creative: "🎨",
@@ -109,11 +109,11 @@ function formatShareText(it: Idea) {
 
 
 /* ---------- Mood helpers ---------- */
-function moodLabel(m: number) { if (m <= 3) return "Realistic"; if (m <= 7) return "Optimistic"; return "Delusional"; }
+function moodLabel(m: number) { if (m <= 3) return "Creative"; if (m <= 7) return "Practical"; return "Absurd"; }
 function moodTagline(m: number) {
-  if (m <= 3) return "Practical advice for the burnt out job searcher.";
-  if (m <= 7) return "Creative advice for the person who is still ready to take on the world despite no paycheck in 6 months.";
-  return "Absurd advice. What's the point of working anyways? I think I'll just turn feral.";
+  if (m <= 3) return "The sky is blue and I'm full of hope. Let's get creative!";
+  if (m <= 7) return "I'm pretty burnt out. Let's make this quick.";
+  return "Existence is illusory and I've completely lost the plot.";
 }
 function auraColor(m: number) { if (m <= 3) return COLORS.unconventional; if (m <= 7) return COLORS.topLink; return COLORS.button; }
 
@@ -337,8 +337,9 @@ const resp = await fetch("/api/ideas", {
                 Realizing your new job manifestations just haven't been delivering? Well my friend, you are not alone.
               </p>
               <p>
-                Resumancer will help you find practical, creative and even absurd ways to zhuzh your online presence and help you stand out amongst the crowd! 
-                Think of it as a professional glow-up. Somewhere out there, there's a paycheck with your name on it, and Resumancer is going to help you find it!
+                Resumancer will help you find creative, practical and even absurd ways to ressurect your job search from the purgatory in which it currently dwells
+                so you can enchant the hiring directors and stand out amongst the crowd!
+                Think of it as personal branding reanimation. Somewhere out there is a pay check with your name on it, and we are going to help you find it!
               </p>
             </div>
 
@@ -347,13 +348,9 @@ const resp = await fetch("/api/ideas", {
             <div className="mt-6">
               <h3 className="font-semibold" style={{ color: COLORS.h1 }}>How it works:</h3>
               <ul className="mt-3 list-disc pl-6 space-y-1">
-                <li>Tell me your target role, industry, skills, interests.</li>
-                <li>Adjust the slider to choose how realistic or outlandish you want the ideas.</li>
-                <li>Hit <em>Inspire me</em> and <span className="underline">watch the magic happen</span>.</li>
-                <li>
-                  Get three directions: <strong>realistic</strong>, <strong>optimistic</strong>, and{" "}
-                  <strong>delusional</strong>.
-                </li>
+                <li>Tell me your target role, industry, skills, interests and any other requirements you might have.</li>
+                <li>Adjust the slider to choose how realistic or outlandish you your suggestions to be.</li>
+                <li>Hit <em>Inspire me</em> and <span className="underline">watch the magic happen</span>!</li>
               </ul>
             </div>
 
@@ -380,7 +377,7 @@ const resp = await fetch("/api/ideas", {
           }}
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-          placeholder="Example: Product Manager, Software Engineer, Exorcist"
+          placeholder="Product Manager, Software Engineer, Wizard"
           className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
           style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
         />
@@ -414,7 +411,7 @@ const resp = await fetch("/api/ideas", {
           }}
           onFocus={() => setShowIndustrySuggestions(true)}
           onBlur={() => setTimeout(() => setShowIndustrySuggestions(false), 150)}
-          placeholder="Example: Media, Fintech, Ghost Hunting"
+          placeholder="Media, Fintech, Paranormal Investigation"
           className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
           style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
         />
@@ -443,7 +440,7 @@ const resp = await fetch("/api/ideas", {
         <input
           value={skillsStr}
           onChange={(e) => setSkillsStr(e.target.value)}
-          placeholder="Example: UX/UI, analytics, reviving job searches from the dead"
+          placeholder="UX/UI, analytics, necromancy"
           className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
           style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
         />
@@ -455,7 +452,7 @@ const resp = await fetch("/api/ideas", {
         <input
           value={interestsStr}
           onChange={(e) => setInterestsStr(e.target.value)}
-          placeholder="Example: wearables, neuroscience, underwater basket weaving"
+          placeholder="wearables, neuroscience, ouija boards"
           className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
           style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
         />
@@ -467,7 +464,7 @@ const resp = await fetch("/api/ideas", {
         <input
           value={additionalContext}
           onChange={(e) => setadditionalContext(e.target.value)}
-          placeholder="Example: low budget, no code, will sell a kidney for a job"
+          placeholder="low budget, no code, requires spell work"
           className="mt-2 w-full rounded-2xl p-3 placeholder-black/50 focus:outline-none focus:ring-2 shadow-sm"
           style={{ backgroundColor: COLORS.cardBg, color: COLORS.text, border: `1px solid ${COLORS.outline}` }}
         />
@@ -592,7 +589,7 @@ const resp = await fetch("/api/ideas", {
         )}
 {ideas && (
   <p className="mt-10 text-sm text-center" style={{ color: "#5a708f" }}>
-    Built by Brigid Walsh. Fueled by caffeine and the belief that when the going gets weird, the weird turn pro.
+    Resumancer: An absurist take on the state of the job market and a <i>potentially</i> helpful tool. Built by Brigid Walsh.
   </p>
 )}
 

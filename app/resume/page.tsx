@@ -159,6 +159,7 @@ export default function ResumePage() {
               </a>
               .
             </div>
+            <p><small><i>p.s., if my headshot seems a bit uncanny valley, that's because it is, but I promise I'm real. :)</i></small></p>
           </div>
 
           {/* Photo card (1/3) */}
@@ -168,7 +169,7 @@ export default function ResumePage() {
             data-testid="photo-card"
           >
             <Image
-              src="/brigid-headshot.png"
+              src="/brigidheadshot.png"
               alt="Brigid Walsh headshot"
               fill
               sizes="(min-width: 1024px) 33vw, (min-width: 768px) 33vw, 100vw"

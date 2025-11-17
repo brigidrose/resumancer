@@ -75,10 +75,16 @@ export async function POST(req: NextRequest) {
 
     const { m, weights, temperature, scope, budget, risk } = moodProfile(mood);
 
+    const targetCategory =
+  m <= 3 ? "creative" :
+  m <= 7 ? "practical" :
+           "absurd";
+
+
   
 
-    const system = "Return ONLY JSON that matches the schema.";
-    const user = `
+  const system = "Return ONLY JSON that matches the schema.";
+const user = `
 You are generating ideas for a JOB SEEKER, not a team already in-role.
 
 Context:
@@ -86,36 +92,43 @@ Context:
 - Industry: ${industry || "(not provided)"}
 - Skills/strengths: ${skills.length ? skills.join(", ") : "(none)"}
 - Interests/hobbies: ${interests.length ? interests.join(", ") : "(none)"}
-- Additoinal Context: ${additionalContext || "(none provided)"}
+- Additional context: ${additionalContext || "(none provided)"}
 - Mood: ${m} (scope=${scope}; budget=${budget}; risk=${risk})
 - Weights: practical=${weights.practical.toFixed(2)}, creative=${weights.creative.toFixed(2)}, absurd=${weights.absurd.toFixed(2)}
+- Selected category for this mood: ${targetCategory}
 
-Previous idea titles (avoid repeating or rephrasing): ${Array.isArray(body.previousTitles) && body.previousTitles.length ? body.previousTitles.join(" | ") : "(none)"}
+Previous idea titles (avoid repeating or rephrasing): ${
+  Array.isArray(body.previousTitles) && body.previousTitles.length
+    ? body.previousTitles.join(" | ")
+    : "(none)"
+}
 Novelty seed (nondeterminism hint): ${body.noveltySeed ?? "none"}
 
-INSTRUCTIONS (tailored for transitioners / job seekers):
-- Output exactly 3 ideas: categories = practical, creative, absurd.
-- For each idea, include "suggested_timeframe" as a realistic duration (e.g., "2 weeks", "30–45 days", "3–6 months") based on the scope you propose.
-- Each idea must help the job seeker create PUBLIC PROOF (a portfolio artifact) that hiring managers can see within the time horizon.
-- Optimize for RESUME bullets, LINKEDIN posts, and a SHAREABLE LINK (GitHub, Notion, Figma, Loom, live demo).
-- Tie each idea directly to the target role + industry. Name concrete tools (Figma, Mixpanel, Amplitude, SQL, Python, Airtable, Bubble, Retool, Webflow, etc) and artifacts (case study, teardown, dashboard, prototype, experiment readout).
-- Respect constraints: if remote only → remote-friendly artifact; if no coding → no-code tools; if part-time → scope down.
-- Avoid generic “do research / network” advice. Be specific: audience, data sources, steps, and a success metric.
-- Ideas must be materially different from each other and from "Previous idea titles".
+INSTRUCTIONS (tailored for transitioners and job seekers):
+- Output exactly 3 ideas. All three ideas must use the same category value: "${targetCategory}".
+- For each idea, include "suggested_timeframe" as a realistic duration (for example "1–2 weeks", "30–45 days", "3–6 months") based on the scope you propose.
+- Each idea must help the job seeker create PUBLIC PROOF (a portfolio artifact, project, or experiment) that hiring managers can see within that timeframe.
+- Optimize for resume bullets, LinkedIn posts, and a shareable link (GitHub, Notion, Figma, Loom, live demo).
+- Tie each idea directly to the target role and industry. Name concrete tools, platforms, or outputs where useful.
+- Respect constraints from the additional context. If they mention remote only, no code, limited time, or other constraints, adjust the scope and tools.
+- Avoid generic "do research" or "network more" advice. Be specific about audience, data sources, steps, and one simple success metric.
+- Ideas must be materially different from each other while all fitting the same overall category "${targetCategory}".
 
-Return JSON with exactly 3 objects, in this order:
-[
-  { "category":"practical","title":"...","why":"...","plan":"...","opener":"..." },
-  { "category":"creative","title":"...","why":"...","plan":"...","opener":"..." },
-  { "category":"absurd","title":"...","why":"...","plan":"...","opener":"..." }
-]
+Return JSON with:
+{
+  "ideas": [
+    { "category":"${targetCategory}","title":"...","why":"...","plan":"...","opener":"...","suggested_timeframe":"..." },
+    { "category":"${targetCategory}","title":"...","why":"...","plan":"...","opener":"...","suggested_timeframe":"..." },
+    { "category":"${targetCategory}","title":"...","why":"...","plan":"...","opener":"...","suggested_timeframe":"..." }
+  ]
+}
 
 Definitions:
-- "plan": 5–8 short lines outlining the artifact to build, tools to use, scope of work, distribution strategy (where it will be shared), and a measurable outcome (e.g., 50 survey completes, 1k views, 2 recruiter replies, 1 demo booked).
+- "plan": 5–8 short lines outlining the artifact to build, tools used, and what the person will ship or publish.
 - "opener": a punchy LinkedIn opener to share the artifact and invite feedback.
-- "suggested_timeframe": a realistic duration for completing the idea (e.g., "2 weeks", "30 days", "3–6 months") based on the scope of work you propose.
-
+- "suggested_timeframe": a realistic duration for completing the plan based on the scope of work you propose.
 `;
+
 
     // ... keep your existing payload with response_format: json_schema ...
     // (no change needed except swapping the `user` content above)
