@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import Link from "next/link";
-import Image from "next/image";
+
 
 const SITE_URL = "https://resumancer.app";
 
@@ -64,7 +64,7 @@ function LoadingOverlay({ show }: { show: boolean }) {
       >
         <div className="flex items-center gap-3">
           <ThinkingDots />
-          <div className="text-sm" style={{ color: COLORS.text }}>Cooking up ideas… this can take a few seconds</div>
+          <div className="text-sm" style={{ color: COLORS.text }}>Conjuring ideas from the ether. This may take a moment.</div>
         </div>
       </div>
     </div>
@@ -269,27 +269,29 @@ const resp = await fetch("/api/ideas", {
 
   return (
     <main className="min-h-screen" style={{ backgroundColor: COLORS.page, color: COLORS.text }}>
-      {/* Header */}
-      <header className="py-6">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="flex items-center justify-between gap-6">
-            <Link href="/" className="flex items-center gap-3">
-              {logoOk ? (
-                <Image
-                  src="/logo-shield.png"
-                  alt="Resumancer logo"
-                  width={40}
-                  height={40}
-                  className="h-10 w-10"
-                  onError={() => setLogoOk(false)}
-                />
-              ) : (
-                <div className="h-10 w-10 rounded-full" style={{ backgroundColor: COLORS.outline }} />
-              )}
-              <span className="text-2xl font-extrabold" style={{ color: COLORS.h1 }}>
-                Resumancer
-              </span>
-            </Link>
+  {/* Header */}
+  <header className="py-6">
+    <div className="mx-auto max-w-6xl px-6">
+      <div className="flex items-center justify-between gap-6">
+        <Link href="/" className="flex items-center gap-3">
+
+          {/* Crystal Ball Emoji Replacing Logo */}
+          <span
+            className="text-4xl"
+            role="img"
+            aria-label="crystal ball"
+          >
+            🔮
+          </span>
+
+          <span
+            className="text-4xl font-extrabold"
+            style={{ color: COLORS.h1 }}
+          >
+            Resumancer
+          </span>
+
+        </Link>
 
             <nav className="flex items-center gap-4">
               {/*Resume button*/}
