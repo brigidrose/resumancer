@@ -1,6 +1,6 @@
 "use client";
-import Image from "next/image";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect } from "react";
 
 /* --------------------------------------------------------------------------
@@ -84,45 +84,71 @@ export default function ResumePage() {
   }, []);
 
   return (
-    <main className="min-h-screen" style={{ backgroundColor: COLORS.page, color: COLORS.text }}>
-      {/* Header (exact layout from original page) */}
-      <header className="py-3" data-testid="resume-header">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="flex items-center h-16 gap-6 justify-start">
-            <Link href="/" className="flex items-center gap-3" aria-label="Resumancer Home">
-              <Image
-                src="/logo-shield.png"
-                alt="Resumancer logo"
-                width={46}
-                height={46}
-                className="h-[46px] w-[46px]"
-                priority
-              />
-              {/* Confirmed by user: brand reads 'Resumancer' */}
-              <span className="text-2xl font-extrabold" style={{ color: COLORS.h1 }}>
-                Resum<span style={{ color: COLORS.unconventional }}>ancer</span>
-              </span>
-            </Link>
+  <main className="min-h-screen" style={{ backgroundColor: COLORS.page, color: COLORS.text }}>
+    {/* Header */}
+    <header className="py-6" data-testid="resume-header">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="flex items-center justify-between gap-6">
+          <Link href="/" className="flex items-center gap-3">
+            {/* Crystal Ball Emoji Replacing Logo */}
+            <span
+              className="text-4xl"
+              role="img"
+              aria-label="crystal ball"
+            >
+              🔮
+            </span>
 
-            <nav className="flex items-center gap-5 text-sm ml-auto">
-              <Link
-                href="/"
-                className="rounded-lg px-5 py-2 font-semibold shadow-sm hover:brightness-95"
-                style={{ backgroundColor: "#d9ecff", color: "#0f172a", border: `1px solid ${COLORS.outline}` }}
-              >
-                Home
-              </Link>
-              <a
-                href="mailto:brigidrose@gmail.com"
-                className="rounded-lg px-5 py-2 font-semibold shadow-sm hover:brightness-95"
-                style={{ backgroundColor: "#d9ecff", color: "#0f172a", border: `1px solid ${COLORS.outline}` }}
-              >
-                Contact
-              </a>
-            </nav>
-          </div>
+            <span
+              className="text-4xl font-extrabold"
+              style={{ color: COLORS.h1 }}
+            >
+              Resumancer
+            </span>
+          </Link>
+
+          <nav className="flex items-center gap-5 text-sm ml-auto">
+  <Link
+    href="https://resumancer.app/"
+    className="rounded-lg px-5 py-2 font-semibold shadow-sm hover:brightness-95"
+    style={{
+      backgroundColor: "#D6B3E5",
+      color: "#0f172a",
+      //border: `1px solid ${COLORS.outline}`,
+    }}
+  >
+    Home
+  </Link>
+
+  <Link
+    href="https://resumancer.app/product-notes"
+    className="rounded-lg px-5 py-2 font-semibold shadow-sm hover:brightness-95"
+    style={{
+      backgroundColor: "#D6B3E5",
+      color: "#0f172a",
+      border: `1px solid ${COLORS.outline}`,
+    }}
+  >
+    Produc Notes
+  </Link>
+
+  <a
+    href="mailto:brigidrose@gmail.com"
+    className="rounded-lg px-5 py-2 font-semibold shadow-sm hover:brightness-95"
+    style={{
+      backgroundColor: "#D6B3E5",
+      color: "#0f172a",
+      border: `1px solid ${COLORS.outline}`,
+    }}
+  >
+    Contact
+  </a>
+</nav>
         </div>
-      </header>
+      </div>
+    </header>
+    {/* ...rest of the page */}
+
 
       <div className="mx-auto max-w-6xl px-4 py-10">
         {/* Bio + Photo (equal-height cards on md+) */}

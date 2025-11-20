@@ -293,27 +293,43 @@ const resp = await fetch("/api/ideas", {
 
         </Link>
 
-            <nav className="flex items-center gap-4">
-              {/*Resume button*/}
-              <a
-                href="https://resumancer.app/resume"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-xl px-4 py-2 text-sm font-semibold shadow hover:brightness-95"
-                style={{ backgroundColor: "#d9ecff", color: "#0f172a" }}
-              
-              >
-                Resume
-              </a>
-              <a
-                href="mailto:brigidrose@gmail.com"
-                className="rounded-xl px-4 py-2 text-sm font-semibold shadow hover:brightness-95"
-                style={{ backgroundColor: "#d9ecff", color: "#0f172a" }}
-                
-              >
-                Contact
-              </a>
-            </nav>
+            <nav className="flex items-center gap-5 text-sm ml-auto">
+  <Link
+    href="https://resumancer.app/product-notes"
+    className="rounded-lg px-5 py-2 font-semibold shadow-sm hover:brightness-95"
+    style={{
+      backgroundColor: "#D6B3E5",
+      color: "#0f172a",
+      border: `1px solid ${COLORS.outline}`,
+    }}
+  >
+    Product Notes
+  </Link>
+
+  <Link
+    href="https://resumancer.app/resume"
+    className="rounded-lg px-5 py-2 font-semibold shadow-sm hover:brightness-95"
+    style={{
+      backgroundColor: "#D6B3E5",
+      color: "#0f172a",
+      border: `1px solid ${COLORS.outline}`,
+    }}
+  >
+    Resume
+  </Link>
+
+  <a
+    href="mailto:brigidrose@gmail.com"
+    className="rounded-lg px-5 py-2 font-semibold shadow-sm hover:brightness-95"
+    style={{
+      backgroundColor: "#D6B3E5",
+      color: "#0f172a",
+      border: `1px solid ${COLORS.outline}`,
+    }}
+  >
+    Contact
+  </a>
+</nav>
           </div>
         </div>
       </header>
